@@ -12,7 +12,7 @@
    e autenticazione, servirli vecchi sarebbe peggio che non servirli.
    ═══════════════════════════════════════════════════════ */
 
-const VERSIONE = 'champion-mob-v8.7.0';
+const VERSIONE = 'champion-mob-v8.7.1';
 
 // Il parser e il database alimenti stanno fuori da mobile/: sono gli
 // stessi file del PC, non copie. Il service worker può comunque

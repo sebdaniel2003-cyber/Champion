@@ -12,6 +12,10 @@
 
 const APP = (function () {
 
+  // Va tenuta allineata a VERSIONE in sw.js: è quella che vedi in alto e che
+  // dice a colpo d'occhio se il telefono sta girando l'ultima versione.
+  const VERSIONE_APP = '8.7.1';
+
   const STORICO_KEY = 'csm_storico';
   const MAX_STORICO = 20;
 
@@ -616,8 +620,31 @@ const APP = (function () {
       setTimeout(avviaVoce, 400);
     }
 
+    const ver = el('app-ver');
+    if (ver) ver.textContent = 'v' + VERSIONE_APP;
+
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       navigator.serviceWorker.register('./sw.js')
+        .then(reg => {
+          // Il guscio in cache rende l'apertura istantanea, ma senza questo
+          // controllo l'app resterebbe vecchia finché non si svuota la cache a
+          // mano: la pagina che stai guardando è servita dal service worker
+          // precedente, che non sa di essere stato superato.
+          reg.update().catch(() => { /* offline: si riproverà alla prossima apertura */ });
+          reg.addEventListener('updatefound', () => {
+            const nuovo = reg.installing;
+            if (!nuovo) return;
+            nuovo.addEventListener('statechange', () => {
+              // `controller` c'è solo se un service worker stava già girando:
+              // alla primissima installazione non c'è niente da ricaricare.
+              if (nuovo.state !== 'activated' || !navigator.serviceWorker.controller) return;
+              if (sessionStorage.getItem('csm_ricaricata')) return;   // niente giri infiniti
+              sessionStorage.setItem('csm_ricaricata', '1');
+              toast('Nuova versione, un attimo…');
+              setTimeout(() => location.reload(), 700);
+            });
+          });
+        })
         .catch(e => console.warn('[APP] service worker non registrato:', e.message));
     }
   }

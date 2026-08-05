@@ -188,6 +188,15 @@ body {
   font-size: 15px;
   letter-spacing: 0.14em;
 }
+/* Il numero di versione a vista: quando qualcosa non torna, la prima domanda
+   è sempre «sto guardando l'ultima versione?» — e ora si risponde da soli. */
+.brand-ver {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
 .stato { display: flex; align-items: center; gap: 6px; margin-right: 4px; }
 .stato-dot {
   width: 8px; height: 8px;
