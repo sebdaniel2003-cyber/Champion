@@ -12348,6 +12348,29 @@ canvas.chart { width: 100% !important; height: 240px !important; }
    I campi di durata si scrivono in minuti; sotto, in piccolo, la lettura
    in chiaro ("1 ora e 30 min") che segue quello che digiti. Serve a non
    dover fare il conto in testa mentre compili. */
+/* Durata modificabile: ore e minuti separati. Il campo delle ore compare
+   solo quando servono, così sotto l'ora resta il solo numero di minuti. */
+.dur-campi { display: inline-flex; align-items: baseline; gap: 3px; }
+.dur-campi input {
+  width: 54px;
+  background: var(--bg-deep, #0b0b0e);
+  border: 1px solid var(--neon-border);
+  border-radius: 8px;
+  color: var(--neon);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 15px;
+  text-align: center;
+  padding: 7px 2px;
+}
+.dur-campi input:focus { outline: none; border-color: var(--neon); }
+.dur-campi input[hidden] { display: none; }
+.dur-u {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-mute);
+}
+.dur-u[hidden] { display: none; }
+
 .rev-sess-ore-eco {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;

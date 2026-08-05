@@ -203,10 +203,8 @@ const REV_FORMS = (function () {
       <div class="rev-step-block">
         <div class="rev-step-row rev-grid-2">
           <div class="field rev-big-num">
-            <label class="field-label">ALLENAMENTO · MINUTI</label>
-            <input class="input rev-input-xl" type="number" step="5" min="0" id="r-ore"
-                   value="${totOre ? DURATA.inMinuti(totOre) : ''}" placeholder="0">
-            <div class="rev-sess-ore-eco" id="r-ore-eco">${CS.fmtDurata(totOre, { zero: '' })}</div>
+            <label class="field-label">ALLENAMENTO TOTALE</label>
+            ${DURATA.campi(DURATA.inMinuti(totOre), 'id="r-ore"')}
           </div>
           <label class="rev-rest-toggle">
             <input type="checkbox" id="r-riposo" ${state.riposo ? 'checked' : ''}>
@@ -253,10 +251,8 @@ const REV_FORMS = (function () {
         </div>
         <div class="rev-sess-card-body">
           <div class="rev-sess-ore-field">
-            <label class="rev-sess-mini-lbl">MINUTI</label>
-            <input class="input rev-sess-ore-input" type="number" step="5" min="0"
-                   value="${sess.ore ? DURATA.inMinuti(sess.ore) : ''}" placeholder="0" data-sess-ore="${idx}">
-            <div class="rev-sess-ore-eco" data-sess-eco="${idx}">${CS.fmtDurata(sess.ore, { zero: '' })}</div>
+            <label class="rev-sess-mini-lbl">DURATA</label>
+            ${DURATA.campi(DURATA.inMinuti(sess.ore), `data-sess-dur="${idx}"`)}
           </div>
           <div class="rev-sess-tipo-field">
             <label class="rev-sess-mini-lbl">TIPO · uno</label>
@@ -280,6 +276,10 @@ const REV_FORMS = (function () {
 
     // ── Repeater sessioni del giorno ──
     bindSessHandlers();
+
+    // Totale scritto a mano: anche qui 90 minuti diventano 1 h e 30 min
+    const oreBox = document.getElementById('r-ore');
+    if (oreBox) oreBox.addEventListener('change', () => DURATA.sistemaCampi(oreBox));
 
     const core = getCoreVisibility();
     const sliderIds = ['r-tec'];
@@ -315,16 +315,18 @@ const REV_FORMS = (function () {
       };
     });
 
-    // Input ore per ogni sessione
-    list.querySelectorAll('[data-sess-ore]').forEach(inp => {
-      inp.oninput = () => {
-        const idx = Number(inp.dataset.sessOre);
-        // Il campo è in minuti — è come si pensa una sessione. Su disco
-        // continuano a finire ore decimali, che è il formato del sistema.
-        const ore = DURATA.daMinuti(parseFloat(inp.value) || 0);
-        if (state.dettagliSessioni[idx]) state.dettagliSessioni[idx].ore = ore;
-        const eco = document.querySelector(`[data-sess-eco="${idx}"]`);
-        if (eco) eco.textContent = CS.fmtDurata(ore, { zero: '' });
+    // Durata di ogni sessione: ore e minuti separati. Su disco continuano a
+    // finire ore decimali, che è il formato del sistema.
+    list.querySelectorAll('[data-sess-dur]').forEach(box => {
+      const idx = Number(box.dataset.sessDur);
+      box.addEventListener('change', () => {
+        const min = DURATA.sistemaCampi(box);
+        if (state.dettagliSessioni[idx]) state.dettagliSessioni[idx].ore = DURATA.daMinuti(min);
+        updateSessTotale();
+      });
+      box.oninput = () => {
+        const min = DURATA.leggiCampi(box);
+        if (state.dettagliSessioni[idx]) state.dettagliSessioni[idx].ore = DURATA.daMinuti(min);
         updateSessTotale();
       };
     });
@@ -361,10 +363,12 @@ const REV_FORMS = (function () {
   function updateSessTotale() {
     const totOre = state.dettagliSessioni.reduce((s, x) => s + (Number(x.ore) || 0), 0);
     const n = state.dettagliSessioni.length;
-    const oreInput = document.getElementById('r-ore');
-    if (oreInput) oreInput.value = totOre > 0 ? DURATA.inMinuti(totOre) : '';
-    const oreEco = document.getElementById('r-ore-eco');
-    if (oreEco) oreEco.textContent = CS.fmtDurata(totOre, { zero: '' });
+    const oreBox = document.getElementById('r-ore');
+    if (oreBox) {
+      const im = oreBox.querySelector('.dur-min');
+      if (im) im.value = DURATA.inMinuti(totOre);
+      DURATA.sistemaCampi(oreBox);
+    }
     const totOreEl = document.getElementById('r-sess-tot-ore');
     if (totOreEl) totOreEl.textContent = CS.fmtDurata(totOre, { zero: '0 min' });
     const totNEl = document.getElementById('r-sess-tot-n');
@@ -387,10 +391,8 @@ const REV_FORMS = (function () {
     return `
       <div class="rev-step-block ${core.sonnoQualita !== false ? 'rev-grid-2' : ''}">
         <div class="field rev-big-num">
-          <label class="field-label">SONNO · MINUTI</label>
-          <input class="input rev-input-xl" type="number" step="15" min="0" id="r-sonno"
-                 value="${state.sonnoOre ? DURATA.inMinuti(state.sonnoOre) : ''}" placeholder="450">
-          <div class="rev-sess-ore-eco" id="r-sonno-eco">${CS.fmtDurata(state.sonnoOre, { zero: '' })}</div>
+          <label class="field-label">SONNO</label>
+          ${DURATA.campi(DURATA.inMinuti(state.sonnoOre), 'id="r-sonno"')}
         </div>
         ${core.sonnoQualita !== false ? sliderRow('QUALITÀ SONNO', 'r-sonnoq', state.sonnoQualita, 1, 5, 1, '⭐') : ''}
       </div>
@@ -408,13 +410,8 @@ const REV_FORMS = (function () {
 
   function attachStepCorpo() {
     const core = getCoreVisibility();
-    const sonnoInput = document.getElementById('r-sonno');
-    const sonnoEco = document.getElementById('r-sonno-eco');
-    if (sonnoInput && sonnoEco) {
-      sonnoInput.addEventListener('input', () => {
-        sonnoEco.textContent = CS.fmtDurata(DURATA.daMinuti(parseFloat(sonnoInput.value) || 0), { zero: '' });
-      });
-    }
+    const sonnoBox = document.getElementById('r-sonno');
+    if (sonnoBox) sonnoBox.addEventListener('change', () => DURATA.sistemaCampi(sonnoBox));
     if (core.sonnoQualita !== false) bindSliders(['r-sonnoq']);
     if (core.moodChips !== false) {
       document.querySelectorAll('#r-mood .fx-chip').forEach(c =>
@@ -504,7 +501,7 @@ const REV_FORMS = (function () {
       state.dettagliSessioni = dettagli.length ? dettagli : [];
       // Derivati: se ci sono sessioni con ore, usa la loro somma; altrimenti prendi il valore manuale digitato in r-ore
       const sessOre = state.dettagliSessioni.reduce((s, x) => s + (Number(x.ore) || 0), 0);
-      const manualOre = DURATA.daMinuti(parseFloat(document.getElementById('r-ore')?.value) || 0);
+      const manualOre = DURATA.daMinuti(DURATA.leggiCampi(document.getElementById('r-ore')));
       state.oreAllenamento = sessOre > 0 ? sessOre : manualOre;
       state.sessioniGiorno = Math.max(1, state.dettagliSessioni.length || 1);
       // tipo[] legacy = unione dei tipi delle sessioni (deduplicato, esclude vuoti)
@@ -518,7 +515,7 @@ const REV_FORMS = (function () {
       // Settings v4: extras nello step 1
       collectExtras('daily', state, 'r-');
     } else if (i === 1) {
-      state.sonnoOre     = DURATA.daMinuti(parseFloat(document.getElementById('r-sonno')?.value) || 0);
+      state.sonnoOre     = DURATA.daMinuti(DURATA.leggiCampi(document.getElementById('r-sonno')));
       if (core.sonnoQualita !== false)
         state.sonnoQualita = parseInt(document.getElementById('r-sonnoq')?.value) || 3;
       if (core.moodChips !== false)

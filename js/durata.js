@@ -3,8 +3,8 @@
    ═══════════════════════════════════════════════════════
    Una regola sola, valida ovunque:
 
-     sotto l'ora  →  minuti          45 min · 30 min · 5 min
-     dall'ora su  →  ore             1 ora · 1 ora e 30 min · 2 ore
+     da 0 a 59 min  →  minuti        45 min · 30 min · 5 min
+     da 1 ora in su →  ore           1 h · 1 h 30 min · 2 h 45 min
 
    Sotto l'ora la lettera «h» non compare mai, e `0,75` non deve
    comparire da nessuna parte: nessuno pensa il proprio allenamento
@@ -37,8 +37,8 @@ const DURATA = (function () {
   }
 
   /**
-   * Forma estesa, quella che si legge nei testi e nelle liste.
-   *   0.75 → "45 min"      1 → "1 ora"      1.5 → "1 ora e 30 min"
+   * La forma che si legge ovunque: liste, testi, riepiloghi.
+   *   0.75 → "45 min"      1 → "1 h"      1.5 → "1 h 30 min"
    * @param {number} ore
    * @param {{zero?: string, segno?: boolean}} [opts]
    *   zero  — cosa mostrare quando la durata è nulla (default "—")
@@ -50,8 +50,8 @@ const DURATA = (function () {
 
     let s;
     if (h === 0)      s = `${m} min`;
-    else if (m === 0) s = h === 1 ? '1 ora' : `${h} ore`;
-    else              s = (h === 1 ? '1 ora' : `${h} ore`) + ` e ${m} min`;
+    else if (m === 0) s = `${h} h`;
+    else              s = `${h} h ${m} min`;
 
     if (opts.segno) s = (neg ? '−' : '+') + ' ' + s;
     else if (neg)   s = '−' + s;
@@ -79,6 +79,51 @@ const DURATA = (function () {
     return fmt(daMinuti(min), opts);
   }
 
-  return { fmt, compatta, fmtMinuti, inMinuti, daMinuti };
+  /* ─── CAMPI DI MODIFICA ─────────────────────────────
+     Una durata non si corregge scrivendo "90": si corregge dicendo 1 h e 30
+     min. Quindi due campi, e quello delle ore compare solo quando servono —
+     sotto l'ora resta il solo numero di minuti, come nella regola.
+
+     Stanno qui e non nelle pagine perché li usano sia il telefono sia la
+     casella di posta del PC: due copie, prima o poi, divergono. */
+
+  function campi(minuti, idAttr = '') {
+    const tot = Math.max(0, Math.round(Number(minuti) || 0));
+    const h = Math.floor(tot / 60), m = tot % 60;
+    return `<span class="dur-campi" ${idAttr}>` +
+      `<input class="dur-ore" type="number" min="0" step="1" inputmode="numeric" ` +
+        `value="${h || ''}" placeholder="0" aria-label="ore"${h ? '' : ' hidden'}>` +
+      `<span class="dur-u dur-u-h"${h ? '' : ' hidden'}>h</span>` +
+      `<input class="dur-min" type="number" min="0" step="5" inputmode="numeric" ` +
+        `value="${m}" placeholder="0" aria-label="minuti">` +
+      `<span class="dur-u">min</span>` +
+      `</span>`;
+  }
+
+  /** Minuti totali attualmente scritti nella coppia di campi. */
+  function leggiCampi(root) {
+    if (!root) return 0;
+    const h = Number((root.querySelector('.dur-ore') || {}).value) || 0;
+    const m = Number((root.querySelector('.dur-min') || {}).value) || 0;
+    return Math.max(0, h * 60 + m);
+  }
+
+  /** Riporta i campi in forma canonica: 90 nei minuti diventa 1 h e 30 min,
+   *  e il campo delle ore compare da solo. Da chiamare quando si esce dal
+   *  campo, non a ogni tasto premuto: riscrivere sotto le dita chi sta
+   *  ancora digitando fa danni. */
+  function sistemaCampi(root) {
+    const tot = leggiCampi(root);
+    const h = Math.floor(tot / 60), m = tot % 60;
+    const io = root.querySelector('.dur-ore');
+    const im = root.querySelector('.dur-min');
+    const uh = root.querySelector('.dur-u-h');
+    if (io) { io.value = h || ''; io.hidden = !h; }
+    if (uh) uh.hidden = !h;
+    if (im) im.value = m;
+    return tot;
+  }
+
+  return { fmt, compatta, fmtMinuti, inMinuti, daMinuti, campi, leggiCampi, sistemaCampi };
 
 })();

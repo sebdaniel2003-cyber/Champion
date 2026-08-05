@@ -14,7 +14,7 @@ const APP = (function () {
 
   // Va tenuta allineata a VERSIONE in sw.js: è quella che vedi in alto e che
   // dice a colpo d'occhio se il telefono sta girando l'ultima versione.
-  const VERSIONE_APP = '8.7.2';
+  const VERSIONE_APP = '8.7.3';
 
   const STORICO_KEY = 'csm_storico';
   const MAX_STORICO = 20;
@@ -238,8 +238,14 @@ const APP = (function () {
     rec.continuous = false;
     rec.maxAlternatives = 1;
 
+    // Ogni dettatura riparte da zero: chi tocca il microfono vuole dire una
+    // cosa nuova, non aggiungerla in coda a quella di prima.
     const ta = el('testo');
-    const base = ta.value.trim();
+    ta.value = '';
+    el('preview').innerHTML = '';
+    el('azioni').innerHTML = '';
+    parsed = null;
+    const base = '';
 
     rec.onstart = () => {
       inAscolto = true;
@@ -294,9 +300,12 @@ const APP = (function () {
            <option value="">${esc(it.alimento.nome)}</option>
            ${it.alternative.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('')}
          </select>` : '';
-    const sub = it.sub || (it.macros
-      ? `${it.macros.kcal} kcal · ${it.macros.pro}g pro · ${it.macros.carb}g carb · ${it.macros.fat}g gr`
-      : '');
+    // Per le durate i due campi sono già la lettura in chiaro: ripeterla sotto
+    // sarebbe rumore. Resta solo quando manca il dato, dove serve davvero.
+    const sub = (it.durata && it.valore > 0) ? ''
+      : it.sub || (it.macros
+        ? `${it.macros.kcal} kcal · ${it.macros.pro}g pro · ${it.macros.carb}g carb · ${it.macros.fat}g gr`
+        : '');
     return `
       <div class="riga ${it.confidenza === 'media' ? 'is-incerto' : ''}" data-i="${i}">
         <span class="riga-ico">${it.icona || '•'}</span>
@@ -306,12 +315,14 @@ const APP = (function () {
           ${alternative}
         </div>
         <div class="riga-val">
-          ${numerico
-            ? `<input class="riga-input" type="number" inputmode="${it.durata ? 'numeric' : 'decimal'}"
-                 step="${it.durata ? 5 : 0.1}" min="0"
-                 value="${it.valore}" data-i="${i}" aria-label="valore">`
-            : `<span class="riga-fisso">${esc(it.valore)}</span>`}
-          <span class="riga-unita">${esc(it.unita || '')}</span>
+          ${it.durata
+            ? DURATA.campi(it.valore, `data-dur="${i}"`)
+            : numerico
+              ? `<input class="riga-input" type="number" inputmode="decimal" step="0.1" min="0"
+                   value="${it.valore}" data-i="${i}" aria-label="valore">
+                 <span class="riga-unita">${esc(it.unita || '')}</span>`
+              : `<span class="riga-fisso">${esc(it.valore)}</span>
+                 <span class="riga-unita">${esc(it.unita || '')}</span>`}
         </div>
         <button class="riga-del" data-del="${i}" aria-label="togli">×</button>
       </div>`;
@@ -382,6 +393,16 @@ const APP = (function () {
 
   function wireRighe() {
     const host = el('preview');
+
+    // Durate: due campi, ore e minuti. Si aggiorna l'intent a ogni tasto, ma
+    // la rimessa in forma (90 min → 1 h 30 min) avviene quando si esce dal
+    // campo, per non riscrivere sotto le dita di chi sta ancora digitando.
+    host.querySelectorAll('[data-dur]').forEach(box => {
+      const it = parsed.intents[Number(box.dataset.dur)];
+      if (!it) return;
+      box.addEventListener('input', () => { it.valore = DURATA.leggiCampi(box); });
+      box.addEventListener('change', () => { it.valore = DURATA.sistemaCampi(box); });
+    });
     // Il giorno è modificabile: se la frase non diceva quando, il parser
     // mette oggi — e a volte si racconta la sera prima.
     const data = host.querySelector('#prev-data');
@@ -452,6 +473,10 @@ const APP = (function () {
   /** Riallinea gli intent ai valori corretti a mano prima di spedirli. */
   function raccogli() {
     const host = el('preview');
+    host.querySelectorAll('[data-dur]').forEach(box => {
+      const it = parsed.intents[Number(box.dataset.dur)];
+      if (it) it.valore = DURATA.leggiCampi(box);
+    });
     host.querySelectorAll('.riga-input').forEach(inp => {
       const i = Number(inp.dataset.i);
       const v = parseFloat(inp.value);

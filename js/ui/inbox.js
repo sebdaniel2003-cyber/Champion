@@ -158,11 +158,14 @@ const INBOX = (function () {
           ${alternative}
         </div>
         <div class="ib-row-val">
-          ${numerico
-            ? `<input class="ib-val-input" type="number" step="${it.durata ? 5 : 0.1}" min="0"
-                 value="${it.valore}" data-i="${i}" aria-label="valore">`
-            : `<span class="ib-val-fixed">${esc(it.valore)}</span>`}
-          <span class="ib-row-unit">${esc(it.unita || '')}</span>
+          ${it.durata
+            ? DURATA.campi(it.valore, `data-dur="${i}"`)
+            : numerico
+              ? `<input class="ib-val-input" type="number" step="0.1" min="0"
+                   value="${it.valore}" data-i="${i}" aria-label="valore">
+                 <span class="ib-row-unit">${esc(it.unita || '')}</span>`
+              : `<span class="ib-val-fixed">${esc(it.valore)}</span>
+                 <span class="ib-row-unit">${esc(it.unita || '')}</span>`}
         </div>
         <button class="ib-row-del" data-del="${i}" title="Togli questa voce" aria-label="Togli">×</button>
       </div>`;
@@ -197,6 +200,10 @@ const INBOX = (function () {
 
   // Riallinea gli intent ai valori modificati a mano prima di applicare
   function harvest(root, parsed) {
+    root.querySelectorAll('[data-dur]').forEach(box => {
+      const it = parsed.intents[Number(box.dataset.dur)];
+      if (it) it.valore = DURATA.leggiCampi(box);
+    });
     root.querySelectorAll('.ib-val-input').forEach(inp => {
       const i = Number(inp.dataset.i);
       const v = parseFloat(inp.value);
@@ -221,6 +228,12 @@ const INBOX = (function () {
   }
 
   function wirePreview(root, parsed, onChange) {
+    root.querySelectorAll('[data-dur]').forEach(box => {
+      const it = parsed.intents[Number(box.dataset.dur)];
+      if (!it) return;
+      box.addEventListener('input', () => { it.valore = DURATA.leggiCampi(box); });
+      box.addEventListener('change', () => { it.valore = DURATA.sistemaCampi(box); });
+    });
     root.querySelectorAll('[data-del]').forEach(b => {
       b.addEventListener('click', () => {
         parsed.intents[Number(b.dataset.del)]._rimosso = true;

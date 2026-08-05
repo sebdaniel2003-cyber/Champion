@@ -474,6 +474,31 @@ body {
 }
 
 .riga-val { display: flex; align-items: baseline; gap: 4px; flex: 0 0 auto; }
+
+/* Durata: ore e minuti separati. Il campo delle ore compare solo quando
+   servono — sotto l'ora resta il solo numero di minuti. */
+.dur-campi { display: inline-flex; align-items: baseline; gap: 3px; }
+.dur-campi input {
+  width: 52px;
+  background: var(--bg-deep);
+  border: 1px solid var(--neon-border);
+  border-radius: 8px;
+  color: var(--neon-bright);
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  padding: 9px 2px;
+  min-height: 44px;
+}
+.dur-campi input:focus {
+  outline: none;
+  border-color: var(--neon);
+  box-shadow: 0 0 0 3px var(--neon-soft);
+}
+.dur-campi input[hidden] { display: none; }
+.dur-u { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.dur-u[hidden] { display: none; }
 .riga-input {
   width: 74px;
   background: var(--bg-deep);
