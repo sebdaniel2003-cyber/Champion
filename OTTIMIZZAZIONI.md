@@ -452,3 +452,108 @@ Verificato anche che senza login il database rifiuta la scrittura.
 dall'append della sessione precedente (`Add-Content -Encoding UTF8` su un file
 già UTF-8 ricodifica i byte multi-byte come se fossero Latin-1). Sistemate.
 
+
+# v8.7.0 — mai più 0,75 (2026-08-05)
+
+Provata sul campo, la Fase 3 ha mostrato che il sistema ragionava come un
+database e non come una persona: «45 min di allenamento» diventava `0,75`,
+«una sessione di allenamento oggi» non produceva niente, e ogni frase dettata
+andava riconfermata sul PC anche quando era già stata riletta sul telefono.
+
+## Le durate
+
+**Sotto l'ora si scrive in minuti, dall'ora in su in ore.** `0,75` → *45 min*,
+`1,5` → *1 ora e 30 min*, `2` → *2 ore*. Sotto l'ora la lettera `h` non compare
+mai, e il formato decimale non appare più da nessuna parte.
+
+Su disco resta tutto com'era (`oreAllenamento: 1.5`): su quel numero si reggono
+medie, criteri oro, confronti fra periodi e ogni grafico già scritto. È formato
+interno, come i millisecondi dentro una data — semplicemente non lo vedi più.
+Nessuna migrazione, nessun rischio sui dati esistenti.
+
+`js/durata.js` (nuovo) tiene la regola, ed è **caricato sia dal PC sia dal
+telefono**: un file solo, come già `js/nlp.js`. `CS.fmtDurata` lo espone accanto
+agli altri formattatori. Esiste anche una forma **compatta** (`1h30`, `45min`)
+per assi e tooltip dei grafici, dove «1 ora e 30 min» sopra ogni colonna
+renderebbe tutto illeggibile.
+
+Convertiti ~45 punti in 9 file — archivio, dashboard, regole dell'assistente,
+tecnica, fisica, oro, telefono. Uno per uno e non a tappeto: nella stessa forma
+(`x.toFixed(1)}h`) erano scritti anche il rapporto di carico, i voti e i
+chilometri, che ore non sono.
+
+`FX.countUp` ha ora un'opzione `format`: senza, un numero che sale non poteva
+scriversi «1 ora e 30 min».
+
+**Inserimento**: i campi di durata (sessioni e sonno nella modale COMPILA, log
+del sonno in FISICA) sono in **minuti**, passo 5, con sotto la lettura in chiaro
+che segue quello che digiti. Il campo del sonno è diventato *ore + minuti*
+separati: nessuno pensa il proprio sonno come «7,5».
+
+**Nel parser** gli intent di durata viaggiano in minuti (`{valore: 45, unita:
+'min'}`) e tornano ore solo in `NLP.apply`, al momento di scrivere. I messaggi
+già in coda nel formato vecchio continuano a funzionare.
+
+## Le date
+
+Aggiunte: **domani**, **dopodomani**, «3 giorni fa», «una settimana fa», «il
+primo agosto», «12 marzo 2025» con l'anno, «il 12» da solo. Già funzionavano
+oggi/ieri/l'altro ieri, i giorni della settimana, «12 marzo» e `3/8`.
+
+Senza anno vale l'occorrenza **passata** più vicina: un diario racconta ciò che
+è già successo. Fanno eccezione domani e dopodomani, che sono esplicitamente in
+avanti. La negazione sul «il 12» evita di scambiare per data una quantità
+(«il 12 di sacco» non è il dodici del mese).
+
+## La sessione come cosa contabile
+
+«una sessione di allenamento oggi» non produceva niente: il numero veniva letto
+ma nessuna regola sapeva cosa fosse una sessione. Ora *una sessione*, *due
+sessioni di pugilato*, *tre sessioni da 45 min* e *oggi ho fatto sparring*
+diventano sessioni vere. Senza durata la voce nasce **a zero e te la chiede
+l'anteprima** — meglio che inventare un'ora che non hai fatto.
+
+Aggiunti anche i modi di dire (`mezz'ora`, `un quarto d'ora`, `tre quarti
+d'ora`, `un'ora e 30`, `un'oretta`), il confronto **per radice** sui plurali
+(«ganci» trova «Gancio» senza doverli elencare tutti) e una cinquantina di alias
+nuovi su tipi, aree, fondamentali e umori.
+
+## La conferma sul PC diventa una scelta
+
+Interruttore in impostazioni → SINCRONIA, **spento di default**. Acceso, il PC
+registra da sé le frasi in cui il parser non ha avuto dubbi e te lo dice con un
+messaggio. Basta una voce incerta — una sessione senza durata, un cibo ambiguo —
+e il messaggio resta in casella ad aspettarti. La comodità dove è sicura, il
+doppio controllo dove serve.
+
+## Il telefono risponde, non solo registra
+
+Lo snapshot porta ora anche **obiettivi in corso**, **stato della settimana
+d'oro** (cosa manca ancora) e gli **ultimi 7 giorni**. Il telefono li mostra
+sotto i numeri di oggi. Resta sotto i 3 KB.
+
+## Il cibo
+
+Fuori da questo giro per scelta: continua a capire i grammi espliciti
+(«200 grammi di pollo»). Il piatto composto — «una ciotola con una scatoletta di
+tonno, insalata, due mozzarelle…» — richiede una tabella di pezzature e una
+lettura a segmenti, e si affronta quando serve.
+
+## Verifica — 112 controlli
+
+- **29 frasi** col vocabolario vero, incluse tutte quelle chieste dall'utente e
+  le preesistenti come rete anti-regressione
+- **7 prove sulle durate**: tutte le 22 route visitate con dati veri, cercando
+  il formato decimale nel testo prodotto. Ne ha trovata una che era sfuggita a
+  mano (il target sul grafico del sonno). Più i campi di inserimento in minuti
+- **44 prove sull'interfaccia** del telefono
+- **32 end-to-end** contro il Supabase reale, col giro completo e l'interruttore
+  in entrambe le posizioni: acceso, la frase certa si registra da sola e quella
+  incerta resta in casella; sul server risultano chiuse solo le prime
+
+**Un bug del banco di prova, non dell'app:** l'harness inlinava gli script
+dentro `<head>` perdendo il `defer`, quindi giravano prima che il `<body>`
+esistesse e tutto il codice tipo `getElementById('btn-compila')?.addEventListener`
+falliva in silenzio. Sembravano cinque tasti morti in topbar. Ora gli script
+inlinati vanno in fondo al body, che è ciò che `defer` garantisce davvero.
+

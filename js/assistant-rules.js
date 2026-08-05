@@ -110,7 +110,7 @@ const ASSISTANT_RULES = [
     },
     message: () => {
       const r = CALC.oreSettVsTarget();
-      return `Ore settimana: ${r.ore.toFixed(1)}/${r.target}h (${Math.round(r.pct)}%). Servono ${(r.target - r.ore).toFixed(1)}h.`;
+      return `Allenamento della settimana: ${CS.fmtDurata(r.ore)} su ${CS.fmtDurata(r.target)} (${Math.round(r.pct)}%). Ne servono ancora ${CS.fmtDurata(r.target - r.ore)}.`;
     },
     question: () => 'Vuoi pianificare le sessioni mancanti?',
     answers: () => [
@@ -382,7 +382,7 @@ const ASSISTANT_RULES = [
     },
     message: () => {
       const s = CALC.sonnoMedio(7);
-      return `Sonno medio ${s.toFixed(1)}h/notte. Sotto 7h tecnica e recupero soffrono.`;
+      return `Sonno medio ${CS.fmtDurata(s)} a notte. Sotto le 7 ore tecnica e recupero soffrono.`;
     },
     question: () => 'Quando torni a 8h?',
     answers: () => [
@@ -597,7 +597,7 @@ const ASSISTANT_RULES = [
     persona: 'recupero', icon: '🚑', severity: 'critica',
     pages: ['dashboard', 'tecnica/sessioni'],
     condition: (C) => C && C.load.acwr != null && C.load.acwr >= 1.5 && !C.state.infortunioAttivo,
-    message: (C) => `Carico a ${C.load.acwr.toFixed(1)}× il tuo cronico (${C.load.ore7.toFixed(1)}h in 7gg vs media ${C.load.cronicoSett.toFixed(1)}h/sett). Sopra 1.5 il rischio infortunio sale in modo netto: il corpo non ha ancora assorbito questa accelerazione.`,
+    message: (C) => `Carico a ${C.load.acwr.toFixed(1)}× il tuo cronico (${CS.fmtDurata(C.load.ore7)} in 7gg contro una media di ${CS.fmtDurata(C.load.cronicoSett)} a settimana). Sopra 1.5 il rischio infortunio sale in modo netto: il corpo non ha ancora assorbito questa accelerazione.`,
     question: () => 'Come gestiamo le prossime 48h?',
     answers: () => [
       { label: 'RIPOSO OGGI',    action: 'modal:planRest' },
@@ -680,7 +680,7 @@ const ASSISTANT_RULES = [
       && C.load.ore7 >= C.state.orePreInfortunio * 0.9,
     message: (C) => {
       const inf = C.state.infortunioChiusoRecente;
-      return `"${inf.parte || 'Infortunio'}" chiuso solo ${inf.giorniFa} giorni fa e sei già a ${C.load.ore7.toFixed(1)}h/sett — il ${Math.round((C.load.ore7 / C.state.orePreInfortunio) * 100)}% del carico che avevi PRIMA dello stop. Le ricadute nascono quasi sempre qui: rientro a piena intensità senza rampa.`;
+      return `"${inf.parte || 'Infortunio'}" chiuso solo ${inf.giorniFa} giorni fa e sei già a ${CS.fmtDurata(C.load.ore7)} a settimana — il ${Math.round((C.load.ore7 / C.state.orePreInfortunio) * 100)}% del carico che avevi PRIMA dello stop. Le ricadute nascono quasi sempre qui: rientro a piena intensità senza rampa.`;
     },
     question: () => 'Riduciamo la rampa?',
     answers: () => [
@@ -714,7 +714,7 @@ const ASSISTANT_RULES = [
     cooldownDays: 2,
     condition: (C) => C && C.state.moodNegDays >= 2
       && C.state.oreVsTarget && C.state.oreVsTarget.ore >= C.state.oreVsTarget.target,
-    message: (C) => `Mood negativo in ${C.state.moodNegDays} degli ultimi 3 giorni mentre sei già a ${C.state.oreVsTarget.ore.toFixed(1)}h/${C.state.oreVsTarget.target}h. Stai spingendo col serbatoio vuoto: il volume c'è, è la testa che sta pagando il conto. Un giorno OFF adesso vale più di 2h in più.`,
+    message: (C) => `Mood negativo in ${C.state.moodNegDays} degli ultimi 3 giorni mentre sei già a ${CS.fmtDurata(C.state.oreVsTarget.ore)} su ${CS.fmtDurata(C.state.oreVsTarget.target)}. Stai spingendo col serbatoio vuoto: il volume c'è, è la testa che sta pagando il conto. Un giorno OFF adesso vale più di 2h in più.`,
     question: () => 'Come la giochiamo?',
     answers: () => [
       { label: 'GIORNO OFF',  action: 'modal:planRest' },

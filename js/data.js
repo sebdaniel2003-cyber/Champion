@@ -695,6 +695,16 @@ const CS = (function () {
     return Number(n).toFixed(decimals);
   }
 
+  // Durate: sotto l'ora in minuti, dall'ora in su in ore. La regola vive in
+  // js/durata.js perché la usa anche il telefono; qui sta solo la scorciatoia,
+  // accanto agli altri formattatori, dove le pagine se l'aspettano.
+  function fmtDurata(ore, opts) {
+    return typeof DURATA !== 'undefined' ? DURATA.fmt(ore, opts) : String(ore);
+  }
+  function fmtDurataCompatta(ore, opts) {
+    return typeof DURATA !== 'undefined' ? DURATA.compatta(ore, opts) : String(ore);
+  }
+
   // ─── CRUD HELPERS ────────────────────────────────────
   function addRevisione(rev) {
     rev.id = rev.id || uid();
@@ -1200,6 +1210,7 @@ const CS = (function () {
 
     // utility
     uid, todayISO, monthKey, weekKey, weekRange, daysOfWeek, isoDateOnly, fmtDate, fmtNumber,
+    fmtDurata, fmtDurataCompatta,
 
     // CRUD revisioni / corpo
     addRevisione, getRevByDate, deleteRevisione,

@@ -135,7 +135,7 @@
       const name     = ['DOM','LUN','MAR','MER','GIO','VEN','SAB'][d.getDay()];
       const num      = d.getDate();
       const disabled = status === 'futuro';
-      const title    = ore > 0 ? `${ore.toFixed(1)}h` : statusLabel(status);
+      const title    = ore > 0 ? CS.fmtDurata(ore) : statusLabel(status);
       return `
         <button class="day-bar-col day-bar-${status}" data-iso="${iso}"
                 ${disabled ? 'disabled' : ''} title="${title}">
@@ -203,8 +203,8 @@
   // ─── WIDGET ORE SETTIMANA ───────────────────────────
   function widgetOreSett() {
     const o = CALC.oreSettVsTarget(new Date());
-    const deltaText = o.deltaVsPrev > 0 ? `↑ +${o.deltaVsPrev.toFixed(1)}h vs scorsa`
-                    : o.deltaVsPrev < 0 ? `↓ ${o.deltaVsPrev.toFixed(1)}h vs scorsa`
+    const deltaText = o.deltaVsPrev > 0 ? `↑ +${CS.fmtDurata(o.deltaVsPrev)} vs scorsa`
+                    : o.deltaVsPrev < 0 ? `↓ ${CS.fmtDurata(o.deltaVsPrev)} vs scorsa`
                     : '= come scorsa';
     const deltaCls = o.deltaVsPrev > 0 ? 'good' : o.deltaVsPrev < 0 ? 'warn' : '';
 
@@ -215,9 +215,8 @@
           <a class="widget-link" href="#/tecnica/sessioni">›</a>
         </div>
         <div class="widget-big">
-          <span id="dash-ore-val" data-to="${o.ore.toFixed(2)}"
-                data-dec="1">${o.ore.toFixed(1)}</span>
-          <span class="widget-unit">/ ${o.target}h</span>
+          <span id="dash-ore-val" data-to="${o.ore.toFixed(2)}">${CS.fmtDurataCompatta(o.ore)}</span>
+          <span class="widget-unit">/ ${CS.fmtDurataCompatta(o.target)}</span>
         </div>
         ${UI.progressBar(o.pct, { color: 'var(--neon)' })}
         <div class="widget-sub ${deltaCls}">${deltaText}</div>
@@ -402,7 +401,7 @@
           <div class="preview-grid">
             <div class="preview-item">
               <span class="preview-lbl">Allenamento</span>
-              <span class="preview-val">${(Number(rev.oreAllenamento) || 0).toFixed(1)}h · ${tipi}</span>
+              <span class="preview-val">${CS.fmtDurata(Number(rev.oreAllenamento) || 0)} · ${tipi}</span>
             </div>
             <div class="preview-item">
               <span class="preview-lbl">Tecnica</span>
@@ -414,7 +413,7 @@
             </div>
             <div class="preview-item">
               <span class="preview-lbl">Sonno</span>
-              <span class="preview-val">${rev.sonnoOre || '—'}h · qualità ${rev.sonnoQualita || '—'}/5</span>
+              <span class="preview-val">${rev.sonnoOre ? CS.fmtDurata(rev.sonnoOre) : '—'} · qualità ${rev.sonnoQualita || '—'}/5</span>
             </div>
             <div class="preview-item">
               <span class="preview-lbl">Volumi</span>
@@ -494,7 +493,7 @@
     const streakEl = document.getElementById('dash-streak-val');
 
     if (pesoEl   && peso)   FX.countUp(pesoEl,   0, peso,   900, { decimals: 1 });
-    if (oreEl)              FX.countUp(oreEl,    0, ore,    800, { decimals: 1 });
+    if (oreEl)              FX.countUp(oreEl,    0, ore,    800, { format: v => CS.fmtDurataCompatta(v) });
     if (streakEl)           FX.countUp(streakEl, 0, streak, 700);
   }
 

@@ -103,13 +103,13 @@
   // Spec dichiarativa delle card KPI
   // zone: 'fisica' | 'focus' | 'tecnica' — driver della PANORAMICA overview a 3 super-card
   const PANO_CARDS = [
-    { id: 'ore',       label: 'ORE ALLENAMENTO', icon: '⏱', reducer: 'sumOre',         fmtBig: v => v.toFixed(1), unit: 'h',     subTpl: 'delta_h',     zone: 'focus',   targetSub: 'focus',   targetPill: 'ore' },
+    { id: 'ore',       label: 'ALLENAMENTO',     icon: '⏱', reducer: 'sumOre',         fmtBig: v => CS.fmtDurataCompatta(v), unit: '', durata: true, subTpl: 'delta_h',     zone: 'focus',   targetSub: 'focus',   targetPill: 'ore' },
     { id: 'sess',      label: 'SESSIONI',        icon: '🥊', reducer: 'countSessioni',  fmtBig: v => String(v),    unit: '',      subTpl: 'media_unit',  zone: 'focus',   targetSub: 'focus',   targetPill: 'sessioni' },
     { id: 'votiAree',  label: 'VOTO MEDIO AREE', icon: '🎯', reducer: 'avgVotoAree',    fmtBig: v => v.toFixed(1), unit: '/10',   subTpl: 'voti_count',  zone: 'tecnica', targetSub: 'tecnica', targetPill: 'voti_aree' },
     { id: 'votiFond',  label: 'VOTI FONDAM.',    icon: '💪', reducer: 'avgVotoFond',    fmtBig: v => v.toFixed(1), unit: '/10',   subTpl: 'voti_count',  zone: 'tecnica', targetSub: 'tecnica', targetPill: 'voti_fond' },
     { id: 'peso',      label: 'PESO',            icon: '⚖️', reducer: 'lastKg',         fmtBig: v => v ? v.toFixed(1) : '—', unit: 'kg', subTpl: 'delta_kg',    zone: 'fisica',  targetSub: 'fisica',  targetPill: 'pesate' },
     { id: 'km',        label: 'KM CORSA',        icon: '🏃', reducer: 'sumKm',          fmtBig: v => v.toFixed(1), unit: 'km',    subTpl: 'pace_delta',  zone: 'fisica',  targetSub: 'fisica',  targetPill: 'corse' },
-    { id: 'sonno',     label: 'SONNO MEDIO',     icon: '🌙', reducer: 'avgSonno',       fmtBig: v => v.toFixed(1), unit: 'h',     subTpl: 'qualita',     zone: 'fisica',  targetSub: 'fisica',  targetPill: 'sonno' },
+    { id: 'sonno',     label: 'SONNO MEDIO',     icon: '🌙', reducer: 'avgSonno',       fmtBig: v => CS.fmtDurataCompatta(v), unit: '', durata: true, subTpl: 'qualita',     zone: 'fisica',  targetSub: 'fisica',  targetPill: 'sonno' },
     { id: 'volume',    label: 'VOLUME CONDIZ.',  icon: '⚡', reducer: 'sumReps',        fmtBig: v => String(Math.round(v)), unit: 'rip', subTpl: 'reps_break', zone: 'fisica', targetSub: 'fisica', targetPill: 'volume' },
     { id: 'obiettivi', label: 'OBIETTIVI',       icon: '✅', reducer: 'completedCount', fmtBig: v => String(v),    unit: '',      subTpl: 'pct_obj',     zone: 'focus',   targetSub: 'focus',   targetPill: 'obiettivi', trendType: 'ring' },
     { id: 'streak',    label: 'STREAK GIORNI',   icon: '🔥', reducer: 'streakNow',      fmtBig: v => String(v),    unit: 'gg',    subTpl: 'streak_max',  zone: 'focus',   targetSub: 'focus',   targetPill: 'streak', trendType: 'heatmap30' },
@@ -721,7 +721,7 @@
       case 'delta_h': {
         const sign = delta > 0 ? '↑ +' : delta < 0 ? '↓ ' : '→ ';
         const cls = delta > 0 ? 'good' : delta < 0 ? 'warn' : 'info';
-        return { html: `${sign}${Math.abs(delta).toFixed(1)}h vs ${periodTag}`, cls };
+        return { html: `${sign}${CS.fmtDurata(Math.abs(delta))} vs ${periodTag}`, cls };
       }
       case 'media_unit': {
         const media = sparkValues.slice(0, sparkValues.length).reduce((a, b) => a + b, 0) / sparkValues.length;
@@ -762,7 +762,7 @@
         const avgQ = son.length ? (son.reduce((a, s) => a + (Number(s.qualita) || 0), 0) / son.length) : 0;
         const sign = delta > 0 ? '↑ +' : delta < 0 ? '↓ ' : '→ ';
         const cls = delta >= 0 ? 'good' : 'warn';
-        return { html: `qualità ${avgQ.toFixed(1)}/5 · ${sign}${Math.abs(delta).toFixed(1)}h vs ${periodTag}`, cls };
+        return { html: `qualità ${avgQ.toFixed(1)}/5 · ${sign}${CS.fmtDurata(Math.abs(delta))} vs ${periodTag}`, cls };
       }
       case 'reps_break': {
         const pStart = units[0].start, pEnd = units[units.length - 1].end;
@@ -871,8 +871,12 @@
           if (!valEl) return;
           const rawNum = getMiniStatNum(zoneId, key, p);
           if (rawNum == null) return;
-          const dec = rawNum % 1 !== 0 ? 1 : 0;
-          FX.countUp(valEl, 0, rawNum, 700, { decimals: dec });
+          const meta = (ZONE_MINI_META[zoneId] || {})[key] || {};
+          if (meta.durata) {
+            FX.countUp(valEl, 0, rawNum, 700, { format: v => CS.fmtDurataCompatta(v) });
+          } else {
+            FX.countUp(valEl, 0, rawNum, 700, { decimals: rawNum % 1 !== 0 ? 1 : 0 });
+          }
         });
         // Anima bar fill
         requestAnimationFrame(() => {
@@ -940,13 +944,13 @@
   const ZONE_MINI_META = {
     fisica: {
       peso:      { ico: '⚖️', label: 'PESO',      unit: 'kg' },
-      sonno:     { ico: '🌙', label: 'SONNO',     unit: 'h' },
+      sonno:     { ico: '🌙', label: 'SONNO',     unit: '', durata: true },
       volume:    { ico: '⚡', label: 'VOLUME',    unit: 'rip' },
       corsa:     { ico: '🏃', label: 'KM CORSA',  unit: 'km' },
       infortuni: { ico: '🩹', label: 'INFORTUNI', unit: '' },
     },
     focus: {
-      ore:       { ico: '⏱',  label: 'ORE',        unit: 'h' },
+      ore:       { ico: '⏱',  label: 'ALLENAMENTO', unit: '', durata: true },
       sessioni:  { ico: '🥊', label: 'SESSIONI',   unit: '' },
       obiettivi: { ico: '✅', label: 'OBIETTIVI',  unit: '' },
       streak:    { ico: '🔥', label: 'STREAK',     unit: 'gg' },
@@ -1022,7 +1026,10 @@
           const decimals = hasDec ? 1 : 0;
           bigEl.innerHTML = `<span class="cup">0</span><span class="widget-unit">${spec.unit}</span>`;
           const cup = bigEl.querySelector('.cup');
-          FX.countUp(cup, 0, Number(currVal) || 0, 700, { decimals });
+          // Le durate contano in ore ma si scrivono in minuti sotto l'ora:
+          // il numero grezzo non deve mai finire a schermo.
+          FX.countUp(cup, 0, Number(currVal) || 0, 700,
+            spec.durata ? { format: v => CS.fmtDurataCompatta(v) } : { decimals });
         }
       }
 
@@ -1092,7 +1099,7 @@
       const isToday = i === 0 ? 'is-today' : '';
       cells.push(
         intensity > 0
-          ? `<div class="fx-heat-cell pano-heat-cell ${isToday}" data-intensity="${intensity}" title="${CS.fmtDate(iso, { short: true })} · ${ore.toFixed(1)}h"></div>`
+          ? `<div class="fx-heat-cell pano-heat-cell ${isToday}" data-intensity="${intensity}" title="${CS.fmtDate(iso, { short: true })} · ${CS.fmtDurata(ore)}"></div>`
           : `<div class="fx-heat-cell pano-heat-cell is-empty" title="${CS.fmtDate(iso, { short: true })} · —"></div>`
       );
     }
@@ -1111,7 +1118,7 @@
         case 'ore': {
           // 🏆 Sessione max ore
           const r = records.maxOreGiorno;
-          if (r && r.val && r.data) out.push({ icon: '🏆', tone: 'info', html: `Sessione più lunga: <b>${r.val.toFixed(1)} h</b> il ${CS.fmtDate(r.data, { long: true })}` });
+          if (r && r.val && r.data) out.push({ icon: '🏆', tone: 'info', html: `Sessione più lunga: <b>${CS.fmtDurata(r.val)}</b> il ${CS.fmtDate(r.data, { long: true })}` });
           // 📈 Trend prima/seconda metà
           const half = Math.floor(vals.length / 2);
           if (half >= 2) {
@@ -1122,7 +1129,7 @@
               const pct = a > 0 ? Math.round((diff / a) * 100) : 0;
               const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
               const tone = diff > 0 ? 'good' : diff < 0 ? 'warn' : 'info';
-              out.push({ icon: '📈', tone, html: `Trend: <b>${arrow} ${Math.abs(diff).toFixed(1)}h</b> seconda metà vs prima (${pct > 0 ? '+' : ''}${pct}%)` });
+              out.push({ icon: '📈', tone, html: `Trend: <b>${arrow} ${CS.fmtDurata(Math.abs(diff))}</b> seconda metà vs prima (${pct > 0 ? '+' : ''}${pct}%)` });
             }
           }
           // 🎯 Target settimanale
@@ -1151,7 +1158,7 @@
           const avg = vals.filter(v => v > 0).length ? (tot / vals.filter(v => v > 0).length) : 0;
           if (avg > 0) out.push({ icon: '📅', tone: 'info', html: `Media <b>${avg.toFixed(1)}</b> sessioni per ${periodWord(panoState.period, false).toLowerCase()} attivo` });
           const r = records.maxOreGiorno;
-          if (r && r.val) out.push({ icon: '💪', tone: 'good', html: `Sessione più lunga: <b>${r.val.toFixed(1)} h</b> il ${CS.fmtDate(r.data, { long: true })}` });
+          if (r && r.val) out.push({ icon: '💪', tone: 'good', html: `Sessione più lunga: <b>${CS.fmtDurata(r.val)}</b> il ${CS.fmtDate(r.data, { long: true })}` });
           if (CALC.streakDays) {
             const sd = CALC.streakDays();
             if (sd > 0) out.push({ icon: '🔥', tone: 'good', html: `Streak attiva: <b>${sd} giorni</b> consecutivi` });
@@ -1274,7 +1281,7 @@
             const d = CALC.sonnoDebito(7.5, 7);
             if (d > 0) {
               const tone = d > 5 ? 'danger' : d > 2 ? 'warn' : 'info';
-              out.push({ icon: '💤', tone, html: `Debito 7gg: <b>${d.toFixed(1)}h</b> sotto target 7.5h` });
+              out.push({ icon: '💤', tone, html: `Debito 7gg: <b>${CS.fmtDurata(d)}</b> sotto il target di ${CS.fmtDurata(7.5)}` });
             } else {
               out.push({ icon: '💤', tone: 'good', html: `Nessun debito sonno: target 7.5h rispettato` });
             }
@@ -1288,7 +1295,7 @@
           const avgP = vals.filter(v => v > 0);
           if (avgP.length) {
             const m = avgP.reduce((a, b) => a + b, 0) / avgP.length;
-            out.push({ icon: '📊', tone: 'info', html: `Media periodo: <b>${m.toFixed(1)}h/notte</b> (${avgP.length} notti registrate)` });
+            out.push({ icon: '📊', tone: 'info', html: `Media periodo: <b>${CS.fmtDurata(m)} a notte</b> (${avgP.length} notti registrate)` });
           }
           break;
         }
@@ -1409,8 +1416,8 @@
 
   // Mapping spec.id → chiave records() per RECORD STORICO
   const RECORDS_MAP = {
-    ore:     { key: 'maxOreGiorno', label: 'Sess. più ore', unit: 'h',  fmt: v => v.toFixed(1) },
-    sess:    { key: 'maxOreGiorno', label: 'Sess. più ore', unit: 'h',  fmt: v => v.toFixed(1) },
+    ore:     { key: 'maxOreGiorno', label: 'Giorno più lungo', unit: '', fmt: v => CS.fmtDurataCompatta(v) },
+    sess:    { key: 'maxOreGiorno', label: 'Giorno più lungo', unit: '', fmt: v => CS.fmtDurataCompatta(v) },
     votiAree:{ key: 'maxTecnica',   label: 'Voto top',      unit: '/10',fmt: v => v.toFixed(1) },
     votiFond:{ key: 'maxTecnica',   label: 'Voto top',      unit: '/10',fmt: v => v.toFixed(1) },
     peso:    { key: 'pesoMin',      label: 'Peso min',      unit: 'kg', fmt: v => v.toFixed(1) },
@@ -2128,13 +2135,16 @@
     if (bigNumEl) {
       const bigStr = spec.fmtBig(currVal);
       const bigDec = String(bigStr).includes('.') ? 1 : 0;
-      FX.countUp(bigNumEl, 0, Number(currVal) || 0, 800, { decimals: bigDec });
+      FX.countUp(bigNumEl, 0, Number(currVal) || 0, 800,
+        spec.durata ? { format: v => CS.fmtDurataCompatta(v) } : { decimals: bigDec });
     }
 
-    // Stats countUp
+    // Stats countUp — per le durate il numero grezzo non compare mai
     const animateStat = (sel, val, dec) => {
       const el = md.el.querySelector(`[data-stat="${sel}"]`);
-      if (el) FX.countUp(el, 0, Number(val) || 0, 700, { decimals: dec });
+      if (!el) return;
+      FX.countUp(el, 0, Number(val) || 0, 700,
+        spec.durata ? { format: v => CS.fmtDurataCompatta(v) } : { decimals: dec });
     };
     setTimeout(() => {
       animateStat('totale', totaleVal, totaleDec);
@@ -2455,7 +2465,7 @@
         const ore = oreByDate[iso] || 0;
         if (ore > 0) { totDays++; totOre += ore; }
         const lvl = ore <= 0 ? 0 : ore < 1 ? 1 : ore < 2 ? 2 : ore < 3 ? 3 : 4;
-        const tip = `${CS.fmtDate(iso, { short: true })} · ${ore > 0 ? ore.toFixed(1) + 'h' : 'riposo'}`;
+        const tip = `${CS.fmtDate(iso, { short: true })} · ${ore > 0 ? CS.fmtDurata(ore) : 'riposo'}`;
         cells.push(`<span class="rev-yheat-cell" data-lvl="${lvl}" title="${tip}"></span>`);
       }
     }
@@ -2468,7 +2478,7 @@
       <div class="panel rev-yheat-panel">
         <div class="rev-yheat-head">
           <div class="panel-title">ULTIMI 12 MESI</div>
-          <div class="rev-yheat-meta">${totDays} giorni allenati · ${totOre.toFixed(0)}h totali</div>
+          <div class="rev-yheat-meta">${totDays} giorni allenati · ${CS.fmtDurata(totOre)} in totale</div>
         </div>
         <div class="rev-yheat-scroll">
           <div class="rev-yheat-months">${labelsHtml}</div>
@@ -2601,7 +2611,7 @@
         <details class="week-accordion" ${isCurrentWeek ? 'open' : ''}>
           <summary class="week-accordion-hd">
             <span class="week-acc-range">${startLbl} → ${endLbl}${goldBadge}</span>
-            <span class="week-acc-meta">${g.items.length}gg · ${ore.toFixed(1)}h${metBadge}</span>
+            <span class="week-acc-meta">${g.items.length}gg · ${CS.fmtDurata(ore)}${metBadge}</span>
           </summary>
           <div class="week-accordion-body">${rowsHtml}</div>
         </details>`;
@@ -3905,7 +3915,7 @@
       const pace = CALC.corsaPace(item.km, item.durataMin);
       return `<div class="result-row"><span>🏃</span> <span>${CS.fmtDate(item.data, { long: true })}</span> <span>${(Number(item.km) || 0).toFixed(1)} km · ${item.durataMin}min</span> <span class="muted">${item.tipo || ''} ${pace ? '· ' + pace.formatted : ''}</span></div>`;
     }
-    if (pill === 'sonno') return `<div class="result-row"><span>🌙</span> <span>${CS.fmtDate(item.data, { long: true })}</span> <span>${Number(item.ore || 0).toFixed(1)} h</span> <span class="muted">qualità ${item.qualita || '—'}/5 ${item.note ? '· ' + escapeHtml(item.note) : ''}</span></div>`;
+    if (pill === 'sonno') return `<div class="result-row"><span>🌙</span> <span>${CS.fmtDate(item.data, { long: true })}</span> <span>${CS.fmtDurata(Number(item.ore) || 0)}</span> <span class="muted">qualità ${item.qualita || '—'}/5 ${item.note ? '· ' + escapeHtml(item.note) : ''}</span></div>`;
     if (pill === 'voti_aree') return `<div class="result-row"><span>◆</span> <span>${CS.fmtDate(item.data, { long: true })}</span> <span>${escapeHtml(item.area)}</span> <span class="muted">voto ${item.voto}/10</span></div>`;
     if (pill === 'voti_fond') return `<div class="result-row"><span>◆</span> <span>${CS.fmtDate(item.data, { long: true })}</span> <span>${escapeHtml(item.esercizio)}</span> <span class="muted">voto ${item.voto}/10</span></div>`;
     if (pill === 'sessioni') return `<div class="result-row"><span>🥊</span> <span>${CS.fmtDate(item.data, { long: true })}</span> <span>${(item.esercizi || []).length} esercizi</span> <span class="muted">${item.luogo || ''} ${item.oraInizio || ''}</span></div>`;
@@ -3913,18 +3923,18 @@
       const r = item;
       const ore = Number(r.oreAllenamento) || Number(r.oreH) || 0;
       const ico = r.riposo ? '○' : (ore > 0 ? '✓' : '✕');
-      return `<div class="result-row"><span>${ico}</span> <span>${CS.fmtDate(r.data, { long: true })}</span> <span>${ore.toFixed(1)}h · tec ${r.tecnica || '—'}/10</span> <span class="muted">${escapeHtml((r.bene || r.allena || '').slice(0, 60))}</span></div>`;
+      return `<div class="result-row"><span>${ico}</span> <span>${CS.fmtDate(r.data, { long: true })}</span> <span>${CS.fmtDurata(ore)} · tec ${r.tecnica || '—'}/10</span> <span class="muted">${escapeHtml((r.bene || r.allena || '').slice(0, 60))}</span></div>`;
     }
     if (pill === 'settimanali') {
       const s = item;
       const ico = s.sett.gold ? '◆ ORO' : `${s.sett.met}/${s.sett.criteri.length}`;
-      return `<div class="result-row"><span class="${s.sett.gold ? 'accent' : ''}">${ico}</span> <span>${CS.fmtDate(s.startISO, { short: true })} → ${CS.fmtDate(s.endISO, { short: true })}</span> <span>${s.agg.ore.toFixed(1)}h · ${s.agg.sessioni} sess</span> <span class="muted">tec ${(s.agg.tecnica || 0).toFixed(1)} · sonno ${(s.agg.sonnoMedio || 0).toFixed(1)}h</span></div>`;
+      return `<div class="result-row"><span class="${s.sett.gold ? 'accent' : ''}">${ico}</span> <span>${CS.fmtDate(s.startISO, { short: true })} → ${CS.fmtDate(s.endISO, { short: true })}</span> <span>${CS.fmtDurata(s.agg.ore)} · ${s.agg.sessioni} sess</span> <span class="muted">tec ${(s.agg.tecnica || 0).toFixed(1)} · sonno ${CS.fmtDurata(s.agg.sonnoMedio || 0)}</span></div>`;
     }
     if (pill === 'mensili') {
       const m = item;
       const monthNames = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
       const ico = m.mese.gold ? '◆ MESE ORO' : `${m.mese.settTop}/${m.mese.settTotal} sett`;
-      return `<div class="result-row"><span class="${m.mese.gold ? 'accent' : ''}">${ico}</span> <span>${monthNames[m.month]} ${m.year}</span> <span>${m.agg.ore.toFixed(1)}h · ${m.agg.sessioni} sess</span> <span class="muted">${Math.round(m.agg.flessioni)} fless · ${m.agg.kmCorsa.toFixed(1)} km</span></div>`;
+      return `<div class="result-row"><span class="${m.mese.gold ? 'accent' : ''}">${ico}</span> <span>${monthNames[m.month]} ${m.year}</span> <span>${CS.fmtDurata(m.agg.ore)} · ${m.agg.sessioni} sess</span> <span class="muted">${Math.round(m.agg.flessioni)} fless · ${m.agg.kmCorsa.toFixed(1)} km</span></div>`;
     }
     return `<div class="result-row"><span>—</span></div>`;
   }
@@ -4016,7 +4026,7 @@
           <div class="criteri-section-title">SETTIMANA D'ORO (tutti devono essere rispettati)</div>
           <ul>
             <li>✓ Allenamento ${cs.giorniAllenamento || 6} giorni su 7</li>
-            <li>✓ Almeno ${cs.oreMinime || 2}h/giorno nei giorni di allenamento</li>
+            <li>✓ Almeno ${CS.fmtDurata(cs.oreMinime || 2)} al giorno nei giorni di allenamento</li>
             <li>✓ ${cs.flessioniGiorno || 50} flessioni + ${cs.squatGiorno || 50} squat ogni giorno</li>
             <li>✓ Corsa almeno ${cs.corseSett || 3} volte a settimana</li>
           </ul>
@@ -4032,7 +4042,7 @@
       <div class="archive-results-head" style="margin-top:var(--sp-4)">STORICO SETTIMANE D'ORO (${settOro})</div>
       ${allWeeks.filter(w => w.sett.gold).length
         ? allWeeks.filter(w => w.sett.gold).map(w =>
-          `<div class="result-row"><span class="accent">◆ ORO</span> <span>${CS.fmtDate(w.startISO, { short: true })} → ${CS.fmtDate(w.endISO, { short: true })}</span> <span>${w.agg.ore.toFixed(1)}h · ${w.agg.sessioni} sess</span></div>`
+          `<div class="result-row"><span class="accent">◆ ORO</span> <span>${CS.fmtDate(w.startISO, { short: true })} → ${CS.fmtDate(w.endISO, { short: true })}</span> <span>${CS.fmtDurata(w.agg.ore)} · ${w.agg.sessioni} sess</span></div>`
         ).join('')
         : '<div class="empty-state"><div class="empty-text">Nessuna settimana d\'oro ancora — continua!</div></div>'}
     `;
@@ -4457,7 +4467,7 @@
       <div class="archive-results-head" style="margin-top:var(--sp-4)">ULTIMI 365 GIORNI</div>
       <div class="streak-heat-wrap">
         <div class="streak-heat-grid">
-          ${days365.map(d => `<div class="streak-heat-cell" data-intensity="${d.intensity}" title="${d.iso} · ${d.ore.toFixed(1)}h"></div>`).join('')}
+          ${days365.map(d => `<div class="streak-heat-cell" data-intensity="${d.intensity}" title="${d.iso} · ${CS.fmtDurata(d.ore)}"></div>`).join('')}
         </div>
         <div class="streak-heat-legend">
           <span class="muted">0h</span>
@@ -5746,7 +5756,7 @@
       <div class="archive-results-head" style="margin-top:var(--sp-4)">ULTIMI 365 GIORNI</div>
       <div class="streak-heat-wrap arch-son-heat-wrap">
         <div class="streak-heat-grid">
-          ${days365.map(d => `<div class="streak-heat-cell arch-son-heat-cell" data-intensity="${d.intensity}" title="${d.iso}${d.ore > 0 ? ` · ${d.ore.toFixed(1)}h${d.qual ? ` · qualità ${d.qual}/5` : ''}` : ' · nessun dato'}"></div>`).join('')}
+          ${days365.map(d => `<div class="streak-heat-cell arch-son-heat-cell" data-intensity="${d.intensity}" title="${d.iso}${d.ore > 0 ? ` · ${CS.fmtDurata(d.ore)}${d.qual ? ` · qualità ${d.qual}/5` : ''}` : ' · nessun dato'}"></div>`).join('')}
         </div>
         <div class="streak-heat-legend">
           <span class="muted">&lt;6h</span>
@@ -5766,7 +5776,7 @@
         ${renderMonthAccordion(groups, s => renderSonnoRow(s, targetH), items => {
           const ore = items.map(x => Number(x.ore)).filter(n => !isNaN(n) && n > 0);
           const mAvg = ore.length ? ore.reduce((s, n) => s + n, 0) / ore.length : 0;
-          return `${items.length} notti · media ${mAvg.toFixed(1)}h`;
+          return `${items.length} notti · media ${CS.fmtDurata(mAvg)}`;
         })}
       </div>
     `;
@@ -5842,7 +5852,7 @@
             callbacks: {
               label: ctx => ctx.dataset.label === 'Target'
                 ? `Target: ${ctx.parsed.y}h`
-                : `Sonno: ${ctx.parsed.y.toFixed(1)}h${qualData[ctx.dataIndex] ? ` · qualità ${qualData[ctx.dataIndex]}/5` : ''}`,
+                : `Sonno: ${CS.fmtDurataCompatta(ctx.parsed.y)}${qualData[ctx.dataIndex] ? ` · qualità ${qualData[ctx.dataIndex]}/5` : ''}`,
             },
           },
         },
@@ -6675,7 +6685,7 @@
         <div class="arch-ore-hero-body">
           <div class="arch-ore-hero-num" data-cup="${agg.oreSettAvg}" data-decimals="1">0<span class="arch-ore-hero-unit">h/sett</span></div>
           <div class="arch-ore-hero-sub">media settimanale · target ${targetSett}h</div>
-          <div class="arch-ore-hero-tot">Totale periodo: <b>${agg.oreTot.toFixed(1)}h</b> in ${agg.giorniAttivi} giorni</div>
+          <div class="arch-ore-hero-tot">Totale periodo: <b>${CS.fmtDurata(agg.oreTot)}</b> in ${agg.giorniAttivi} giorni</div>
         </div>
       </div>
 
@@ -6804,7 +6814,7 @@
         ? `<span class="arch-ore-month-pct" style="color:${color};background:${color}1a;border-color:${color}40">${Math.round(pct)}%</span>`
         : `<span class="arch-ore-month-pct is-empty" title="Imposta un obiettivo mensile 'Ore allenamento' per ${mName} ${yr}">— %</span>`;
       const targetMeta = hasTarget
-        ? `<span class="arch-ore-month-target muted">target ${targetMese.toFixed(0)}h</span>`
+        ? `<span class="arch-ore-month-target muted">target ${CS.fmtDurataCompatta(targetMese)}</span>`
         : `<span class="arch-ore-month-target is-empty" title="Imposta un obiettivo mensile 'Ore allenamento'">⚙ no target</span>`;
       const barHtml = hasTarget
         ? `<div class="arch-ore-month-bar" data-pct="${Math.round(pct)}">
@@ -6880,7 +6890,7 @@
         const tipoMeta = d.tipo
           ? (SESSIONE_TIPI.find(t => t.key === categorizeSessione({ tipo: d.tipo })) || SESSIONE_TIPI[SESSIONE_TIPI.length - 1])
           : { icon: '🥊', label: 'ALLENAMENTO', color: '#B45CFF' };
-        return `<span class="arch-ore-row-breakdown-chip" style="color:${tipoMeta.color}">${tipoMeta.icon} ${oreD.toFixed(1)}h</span>`;
+        return `<span class="arch-ore-row-breakdown-chip" style="color:${tipoMeta.color}">${tipoMeta.icon} ${CS.fmtDurataCompatta(oreD)}</span>`;
       }).filter(Boolean);
       if (parts.length) {
         breakdown = `<div class="arch-ore-row-breakdown">${parts.join(' · ')}</div>`;
@@ -6953,7 +6963,7 @@
           borderRadius: 4,
         }, {
           type: 'line',
-          label: `Target ${dailyTarget.toFixed(1)}h/gg`,
+          label: `Target ${CS.fmtDurataCompatta(dailyTarget)}/gg`,
           data: sorted.map(() => dailyTarget),
           borderColor: 'rgba(0,255,136,0.55)',
           borderDash: [6, 4],
@@ -6978,7 +6988,7 @@
             borderColor: 'rgba(180,92,255,0.4)',
             borderWidth: 1,
             padding: 10,
-            callbacks: { label: ctx => `${ctx.dataset.label === 'Ore allenamento' ? 'Ore' : 'Target'}: ${ctx.parsed.y.toFixed(1)}h` },
+            callbacks: { label: ctx => `${ctx.dataset.label === 'Ore allenamento' ? 'Allenamento' : 'Target'}: ${CS.fmtDurataCompatta(ctx.parsed.y)}` },
           },
         },
         animation: { duration: 600, easing: 'easeInOutQuart' },
@@ -7010,7 +7020,7 @@
         <div class="tip-day"></div>
         <div class="tip-ore-row">
           <span class="tip-ore-big">0</span><span class="tip-ore-unit">h</span>
-          <span class="tip-ore-target">/ ${ORE_DAILY_TARGET_H}h target</span>
+          <span class="tip-ore-target">/ ${CS.fmtDurataCompatta(ORE_DAILY_TARGET_H)} target</span>
         </div>
         <div class="tip-msg"></div>
       </div>
@@ -7042,13 +7052,13 @@
       msgEl.textContent = '✓ Target raggiunto';
       msgEl.style.color = color;
     } else if (pct >= 70) {
-      msgEl.textContent = `Quasi al target (-${(ORE_DAILY_TARGET_H - ore).toFixed(1)}h)`;
+      msgEl.textContent = `Quasi al target (-${CS.fmtDurata(ORE_DAILY_TARGET_H - ore)})`;
       msgEl.style.color = color;
     } else if (pct >= 40) {
-      msgEl.textContent = `Sotto target (-${(ORE_DAILY_TARGET_H - ore).toFixed(1)}h)`;
+      msgEl.textContent = `Sotto target (-${CS.fmtDurata(ORE_DAILY_TARGET_H - ore)})`;
       msgEl.style.color = color;
     } else {
-      msgEl.textContent = `Lontano dal target (-${(ORE_DAILY_TARGET_H - ore).toFixed(1)}h)`;
+      msgEl.textContent = `Lontano dal target (-${CS.fmtDurata(ORE_DAILY_TARGET_H - ore)})`;
       msgEl.style.color = color;
     }
 
@@ -7353,7 +7363,7 @@
           <div class="arch-cat-card-score" style="color:${t.color}" data-cup="${t.agg.count}">0</div>
         </div>
         <div class="arch-cat-card-row">
-          <div class="arch-cat-card-sub">${t.agg.oreTot.toFixed(1)}h tot · ${t.agg.oreAvg.toFixed(1)}h media · int ${t.agg.intAvg.toFixed(1)}/10</div>
+          <div class="arch-cat-card-sub">${CS.fmtDurataCompatta(t.agg.oreTot)} tot · ${CS.fmtDurataCompatta(t.agg.oreAvg)} media · int ${t.agg.intAvg.toFixed(1)}/10</div>
           <span class="arch-cat-delta ${dir}">${deltaLbl}</span>
         </div>
         <div class="arch-ses-card-spark" data-ses-spark></div>
@@ -7393,7 +7403,7 @@
       <div class="arch-l2-list">
         ${renderMonthAccordion(groups, s => renderSessioneRow(s, t), items => {
           const ore = items.reduce((sum, s) => sum + sessioneDurataOre(s), 0);
-          return `${items.length} sessioni · ${ore.toFixed(1)}h`;
+          return `${items.length} sessioni · ${CS.fmtDurata(ore)}`;
         })}
       </div>
     `;
@@ -7412,7 +7422,7 @@
         <span class="arch-l2-row-mid">
           <span class="arch-ses-row-big" style="color:${t.color}">${ese.length}</span>
           <span class="arch-ses-row-unit">esercizi</span>
-          ${dur > 0 ? `<span class="arch-ses-row-pill arch-ses-dur">${dur.toFixed(1)}h</span>` : ''}
+          ${dur > 0 ? `<span class="arch-ses-row-pill arch-ses-dur">${CS.fmtDurataCompatta(dur)}</span>` : ''}
           ${inten > 0 ? `<span class="arch-ses-row-pill arch-ses-int">int ${inten.toFixed(1)}/10</span>` : ''}
           ${s.luogo ? `<span class="arch-ses-row-pill arch-ses-luogo">📍 ${escapeHtml(s.luogo)}</span>` : ''}
         </span>
@@ -7487,7 +7497,7 @@
             padding: 10,
             callbacks: {
               label: ctx => ctx.dataset.label === 'Ore'
-                ? `${ctx.parsed.y.toFixed(1)}h`
+                ? CS.fmtDurataCompatta(ctx.parsed.y)
                 : ctx.parsed.y == null ? 'int: —' : `intensità ${ctx.parsed.y.toFixed(1)}/10`,
             },
           },
@@ -7619,7 +7629,7 @@
         <div class="arch-ore-hero-body">
           <div class="arch-ore-hero-num" data-cup="${agg.sessSettAvg}" data-decimals="1">0<span class="arch-ore-hero-unit">sess/sett</span></div>
           <div class="arch-ore-hero-sub">media settimanale · target ${(targetSett / 7).toFixed(targetSett % 7 === 0 ? 0 : 1)} sess/giorno</div>
-          <div class="arch-ore-hero-tot">Totale periodo: <b>${agg.count}</b> sessioni in ${agg.giorniAttivi} giorni · <b>${agg.oreTot.toFixed(1)}h</b></div>
+          <div class="arch-ore-hero-tot">Totale periodo: <b>${agg.count}</b> sessioni in ${agg.giorniAttivi} giorni · <b>${CS.fmtDurata(agg.oreTot)}</b></div>
         </div>
       </div>
 
@@ -7728,7 +7738,7 @@
                   ${pctBadge}
                 </div>
                 <div class="arch-ore-month-meta">
-                  <span class="arch-ore-month-days">${oreM.toFixed(1)}h totali</span>
+                  <span class="arch-ore-month-days">${CS.fmtDurata(oreM)} in totale</span>
                   ${targetMeta}
                 </div>
               </div>
@@ -8155,7 +8165,7 @@
         <span class="arch-l2-row-mid">
           <span class="arch-vol-row-big" style="color:${t.color}">${val}</span>
           <span class="arch-vol-row-unit">rip</span>
-          ${ore > 0 ? `<span class="muted"> · ${ore.toFixed(1)}h allenamento</span>` : ''}
+          ${ore > 0 ? `<span class="muted"> · ${CS.fmtDurata(ore)} di allenamento</span>` : ''}
         </span>
         ${note ? `<div class="arch-row-note">${escapeHtml(note.slice(0, 120))}</div>` : ''}
       </div>

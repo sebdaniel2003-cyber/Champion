@@ -97,6 +97,39 @@ const INBOX = (function () {
     persist(list.filter(x => x.stato === 'pending' || tieni.has(x.id)));
   }
 
+  /** Applicazione automatica (opzionale, spenta di default).
+   *  Registra da sé SOLO le frasi in cui il parser non ha avuto dubbi: basta
+   *  una voce incerta — una porzione stimata, un cibo ambiguo, una sessione
+   *  senza durata — e il messaggio resta in casella ad aspettarti. È il punto
+   *  in cui la comodità smette di essere gratis. */
+  function applicaSicuri() {
+    const sicuri = pending().filter(m =>
+      Array.isArray(m.intents) && m.intents.length &&
+      m.intents.every(i => i.confidenza === 'alta') &&
+      !(m.nonRiconosciuto && m.nonRiconosciuto.length));
+
+    let voci = 0, messaggi = 0;
+    for (const m of sicuri) {
+      const res = NLP.apply(m.data, m.intents);
+      if (res.err.length) { console.warn('[INBOX] applicazione automatica:', res.err); continue; }
+      voci += res.ok;
+      messaggi++;
+      setStato(m.id, 'applied');
+    }
+    if (voci) {
+      UI.toast(`${voci} ${voci === 1 ? 'voce registrata' : 'voci registrate'} dal telefono`, 'ok');
+      // La pagina va ridisegnata coi numeri nuovi, ma non mentre l'utente sta
+      // compilando qualcosa: una modale aperta significa "sono in mezzo a una
+      // cosa", e ridisegnare sotto le mani è il modo più veloce per far
+      // perdere quello che stava scrivendo.
+      if (typeof ROUTER !== 'undefined' && !document.querySelector('.modal-overlay')) {
+        const cur = ROUTER.current();
+        if (cur && cur.section) ROUTER.go(cur.section, cur.sub);
+      }
+    }
+    return { messaggi, voci };
+  }
+
   // ─── ANTEPRIMA (il cuore della conferma) ────────────
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
@@ -126,7 +159,8 @@ const INBOX = (function () {
         </div>
         <div class="ib-row-val">
           ${numerico
-            ? `<input class="ib-val-input" type="number" step="0.1" value="${it.valore}" data-i="${i}" aria-label="valore">`
+            ? `<input class="ib-val-input" type="number" step="${it.durata ? 5 : 0.1}" min="0"
+                 value="${it.valore}" data-i="${i}" aria-label="valore">`
             : `<span class="ib-val-fixed">${esc(it.valore)}</span>`}
           <span class="ib-row-unit">${esc(it.unita || '')}</span>
         </div>
@@ -197,11 +231,16 @@ const INBOX = (function () {
     root.querySelectorAll('.ib-val-input').forEach(inp => {
       inp.addEventListener('input', () => {
         const it = parsed.intents[Number(inp.dataset.i)];
-        if (it && it.target === 'pasti' && it.alimento) {
-          const v = parseFloat(inp.value) || 0;
+        if (!it) return;
+        const sub = inp.closest('.ib-row').querySelector('.ib-row-sub');
+        if (!sub) return;
+        const v = parseFloat(inp.value) || 0;
+        // Le durate si correggono in minuti e la lettura in chiaro segue.
+        if (it.durata) {
+          sub.textContent = CS.fmtDurata(DURATA.daMinuti(v), { zero: 'da riempire' });
+        } else if (it.target === 'pasti' && it.alimento) {
           const m = NLP.macrosPer(it.alimento, v);
-          const sub = inp.closest('.ib-row').querySelector('.ib-row-sub');
-          if (sub) sub.textContent = `${m.kcal} kcal · ${m.pro}g pro · ${m.carb}g carb · ${m.fat}g gr`;
+          sub.textContent = `${m.kcal} kcal · ${m.pro}g pro · ${m.carb}g carb · ${m.fat}g gr`;
         }
       });
     });
@@ -406,6 +445,7 @@ const INBOX = (function () {
     refreshBadge();
   }
 
-  return { init, capture, open, push, ingest, pending, count, refreshBadge, renderPreview, wirePreview, harvest };
+  return { init, capture, open, push, ingest, applicaSicuri, pending, count,
+           refreshBadge, renderPreview, wirePreview, harvest };
 
 })();

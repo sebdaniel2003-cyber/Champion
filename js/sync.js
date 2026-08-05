@@ -200,7 +200,68 @@ const SYNC = (function () {
       },
       metricheExtra: (CS.getEnabledFields ? CS.getEnabledFields('daily').extras : []),
       campiAttivi: (CS.state.revFieldsConfig && CS.state.revFieldsConfig.coreVisibility) || {},
+
+      // Con questi tre il telefono può RISPONDERTI, non solo registrare:
+      // «ti mancano 40 min al target», «la settimana d'oro è ancora in piedi».
+      obiettivi: obiettiviInCorso(),
+      oro: statoOro(),
+      ultimi7: ultimiGiorni(7),
     };
+  }
+
+  /** Gli obiettivi ancora aperti, ridotti all'osso. Massimo 8: il telefono
+   *  ne mostra pochi e la banda del piano gratuito non è infinita. */
+  function obiettiviInCorso() {
+    try {
+      return (CS.state.obiettivi || [])
+        .filter(o => !o.completed)
+        .slice(0, 8)
+        .map(o => {
+          const p = (typeof CALC !== 'undefined' && CALC.progressObiettivo)
+            ? CALC.progressObiettivo(o) : null;
+          return {
+            descrizione: o.descrizione,
+            scadenza: o.scadenza,
+            pct: p ? Math.round(p.pct) : 0,
+            corrente: p ? p.current : null,
+            target: o.target != null ? o.target : (p ? p.target : null),
+            unita: o.unita || '',
+          };
+        });
+    } catch (e) { console.warn('[SYNC] obiettivi non inclusi:', e.message); return []; }
+  }
+
+  /** A che punto è la settimana d'oro: quali criteri mancano ancora. */
+  function statoOro() {
+    try {
+      if (typeof CALC === 'undefined' || !CALC.settimanaTopCheck) return null;
+      const s = CALC.settimanaTopCheck(new Date());
+      return {
+        gold: s.gold,
+        fatti: s.met,
+        totali: s.criteri.length,
+        mancanti: s.criteri.filter(c => !c.met).map(c => ({ label: c.label, val: c.val })),
+      };
+    } catch (e) { console.warn('[SYNC] oro non incluso:', e.message); return null; }
+  }
+
+  /** Gli ultimi N giorni in forma minima, per i confronti al volo. */
+  function ultimiGiorni(n) {
+    try {
+      const out = [];
+      const d = new Date();
+      for (let i = 0; i < n; i++) {
+        const iso = CS.isoDateOnly ? CS.isoDateOnly(d) : d.toISOString().slice(0, 10);
+        const r = CS.getRevByDate(iso);
+        out.push({
+          data: iso,
+          ore: r ? (Number(r.oreAllenamento) || 0) : 0,
+          riposo: !!(r && r.riposo),
+        });
+        d.setDate(d.getDate() - 1);
+      }
+      return out;
+    } catch (e) { console.warn('[SYNC] ultimi giorni non inclusi:', e.message); return []; }
   }
 
   function hash(s) {
@@ -260,6 +321,9 @@ const SYNC = (function () {
       stato = 'ok';
       if (Array.isArray(righe) && righe.length && typeof INBOX !== 'undefined') {
         INBOX.ingest(righe);
+        // Con l'interruttore acceso le frasi capite con certezza vengono
+        // registrate subito; le altre restano in casella, come sempre.
+        if (cfg && cfg.autoApplica) INBOX.applicaSicuri();
       }
       BUS.emit('sync:change', getStato());
       return righe || [];

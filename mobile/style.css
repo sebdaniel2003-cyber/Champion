@@ -271,6 +271,47 @@ body {
   background: linear-gradient(90deg, var(--neon-deep), var(--neon));
   border-radius: 3px;
 }
+/* Settimana d'oro e obiettivi: cosa manca, non un punteggio */
+.ctx-oro {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.ctx-oro-head {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+.ctx-oro-head b { color: var(--txt); font-size: 12px; }
+.ctx-oro-manca { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+.ctx-oro-manca b { color: var(--warn); }
+.ctx-oro.is-gold {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #FFE600;
+  text-align: center;
+}
+
+.ctx-obj { margin-top: 12px; display: flex; flex-direction: column; gap: 9px; }
+.ctx-obj-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  margin-bottom: 4px;
+}
+.ctx-obj-top span {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ctx-obj-top b { color: var(--neon-bright); flex: 0 0 auto; }
+
 .ctx-coda {
   margin-top: 12px;
   font-size: 13px;

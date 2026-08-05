@@ -38,15 +38,17 @@ const FX = (function () {
     const dec = opts.decimals || 0;
     const suf = opts.suffix || '';
     const pre = opts.prefix || '';
-    if (reduceMotion()) {
-      el.textContent = pre + (dec ? Number(to).toFixed(dec) : Math.round(to)) + suf;
-      return;
-    }
+    // `format` fa passare il valore da una funzione prima di scriverlo: serve
+    // alle durate, che non si leggono come numeri ma come "1 ora e 30 min".
+    const scrivi = (v) => {
+      el.textContent = pre + (opts.format ? opts.format(v)
+                                          : (dec ? v.toFixed(dec) : Math.round(v))) + suf;
+    };
+    if (reduceMotion()) { scrivi(Number(to)); return; }
     const start = performance.now();
     function tick(now) {
       const t = Math.min(1, (now - start) / ms);
-      const v = from + (to - from) * ease(t);
-      el.textContent = pre + (dec ? v.toFixed(dec) : Math.round(v)) + suf;
+      scrivi(from + (to - from) * ease(t));
       if (t < 1) requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);

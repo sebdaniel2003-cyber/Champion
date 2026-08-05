@@ -203,8 +203,10 @@ const REV_FORMS = (function () {
       <div class="rev-step-block">
         <div class="rev-step-row rev-grid-2">
           <div class="field rev-big-num">
-            <label class="field-label">ORE ALLENAMENTO</label>
-            <input class="input rev-input-xl" type="number" step="0.25" min="0" id="r-ore" value="${totOre || ''}" placeholder="0">
+            <label class="field-label">ALLENAMENTO · MINUTI</label>
+            <input class="input rev-input-xl" type="number" step="5" min="0" id="r-ore"
+                   value="${totOre ? DURATA.inMinuti(totOre) : ''}" placeholder="0">
+            <div class="rev-sess-ore-eco" id="r-ore-eco">${CS.fmtDurata(totOre, { zero: '' })}</div>
           </div>
           <label class="rev-rest-toggle">
             <input type="checkbox" id="r-riposo" ${state.riposo ? 'checked' : ''}>
@@ -225,7 +227,7 @@ const REV_FORMS = (function () {
             ${state.dettagliSessioni.map((s, i) => renderSessCard(s, i, state.dettagliSessioni.length)).join('')}
           </div>
           <div class="rev-sess-total" id="r-sess-total">
-            TOTALE: <b id="r-sess-tot-ore">${totOre.toFixed(1)}</b>h · <b id="r-sess-tot-n">${state.dettagliSessioni.length}</b> session${state.dettagliSessioni.length === 1 ? 'e' : 'i'}
+            TOTALE: <b id="r-sess-tot-ore">${CS.fmtDurata(totOre, { zero: '0 min' })}</b> · <b id="r-sess-tot-n">${state.dettagliSessioni.length}</b> session${state.dettagliSessioni.length === 1 ? 'e' : 'i'}
           </div>
         </div>
 
@@ -251,8 +253,10 @@ const REV_FORMS = (function () {
         </div>
         <div class="rev-sess-card-body">
           <div class="rev-sess-ore-field">
-            <label class="rev-sess-mini-lbl">ORE</label>
-            <input class="input rev-sess-ore-input" type="number" step="0.25" min="0" value="${sess.ore || ''}" placeholder="0" data-sess-ore="${idx}">
+            <label class="rev-sess-mini-lbl">MINUTI</label>
+            <input class="input rev-sess-ore-input" type="number" step="5" min="0"
+                   value="${sess.ore ? DURATA.inMinuti(sess.ore) : ''}" placeholder="0" data-sess-ore="${idx}">
+            <div class="rev-sess-ore-eco" data-sess-eco="${idx}">${CS.fmtDurata(sess.ore, { zero: '' })}</div>
           </div>
           <div class="rev-sess-tipo-field">
             <label class="rev-sess-mini-lbl">TIPO · uno</label>
@@ -315,8 +319,12 @@ const REV_FORMS = (function () {
     list.querySelectorAll('[data-sess-ore]').forEach(inp => {
       inp.oninput = () => {
         const idx = Number(inp.dataset.sessOre);
-        const v = parseFloat(inp.value) || 0;
-        if (state.dettagliSessioni[idx]) state.dettagliSessioni[idx].ore = v;
+        // Il campo è in minuti — è come si pensa una sessione. Su disco
+        // continuano a finire ore decimali, che è il formato del sistema.
+        const ore = DURATA.daMinuti(parseFloat(inp.value) || 0);
+        if (state.dettagliSessioni[idx]) state.dettagliSessioni[idx].ore = ore;
+        const eco = document.querySelector(`[data-sess-eco="${idx}"]`);
+        if (eco) eco.textContent = CS.fmtDurata(ore, { zero: '' });
         updateSessTotale();
       };
     });
@@ -354,9 +362,11 @@ const REV_FORMS = (function () {
     const totOre = state.dettagliSessioni.reduce((s, x) => s + (Number(x.ore) || 0), 0);
     const n = state.dettagliSessioni.length;
     const oreInput = document.getElementById('r-ore');
-    if (oreInput) oreInput.value = totOre > 0 ? totOre : '';
+    if (oreInput) oreInput.value = totOre > 0 ? DURATA.inMinuti(totOre) : '';
+    const oreEco = document.getElementById('r-ore-eco');
+    if (oreEco) oreEco.textContent = CS.fmtDurata(totOre, { zero: '' });
     const totOreEl = document.getElementById('r-sess-tot-ore');
-    if (totOreEl) totOreEl.textContent = totOre.toFixed(1);
+    if (totOreEl) totOreEl.textContent = CS.fmtDurata(totOre, { zero: '0 min' });
     const totNEl = document.getElementById('r-sess-tot-n');
     if (totNEl) totNEl.textContent = String(n);
     const totalEl = document.getElementById('r-sess-total');
@@ -377,8 +387,10 @@ const REV_FORMS = (function () {
     return `
       <div class="rev-step-block ${core.sonnoQualita !== false ? 'rev-grid-2' : ''}">
         <div class="field rev-big-num">
-          <label class="field-label">SONNO · ore</label>
-          <input class="input rev-input-xl" type="number" step="0.25" id="r-sonno" value="${state.sonnoOre || ''}" placeholder="7.5">
+          <label class="field-label">SONNO · MINUTI</label>
+          <input class="input rev-input-xl" type="number" step="15" min="0" id="r-sonno"
+                 value="${state.sonnoOre ? DURATA.inMinuti(state.sonnoOre) : ''}" placeholder="450">
+          <div class="rev-sess-ore-eco" id="r-sonno-eco">${CS.fmtDurata(state.sonnoOre, { zero: '' })}</div>
         </div>
         ${core.sonnoQualita !== false ? sliderRow('QUALITÀ SONNO', 'r-sonnoq', state.sonnoQualita, 1, 5, 1, '⭐') : ''}
       </div>
@@ -396,6 +408,13 @@ const REV_FORMS = (function () {
 
   function attachStepCorpo() {
     const core = getCoreVisibility();
+    const sonnoInput = document.getElementById('r-sonno');
+    const sonnoEco = document.getElementById('r-sonno-eco');
+    if (sonnoInput && sonnoEco) {
+      sonnoInput.addEventListener('input', () => {
+        sonnoEco.textContent = CS.fmtDurata(DURATA.daMinuti(parseFloat(sonnoInput.value) || 0), { zero: '' });
+      });
+    }
     if (core.sonnoQualita !== false) bindSliders(['r-sonnoq']);
     if (core.moodChips !== false) {
       document.querySelectorAll('#r-mood .fx-chip').forEach(c =>
@@ -485,7 +504,7 @@ const REV_FORMS = (function () {
       state.dettagliSessioni = dettagli.length ? dettagli : [];
       // Derivati: se ci sono sessioni con ore, usa la loro somma; altrimenti prendi il valore manuale digitato in r-ore
       const sessOre = state.dettagliSessioni.reduce((s, x) => s + (Number(x.ore) || 0), 0);
-      const manualOre = parseFloat(document.getElementById('r-ore')?.value) || 0;
+      const manualOre = DURATA.daMinuti(parseFloat(document.getElementById('r-ore')?.value) || 0);
       state.oreAllenamento = sessOre > 0 ? sessOre : manualOre;
       state.sessioniGiorno = Math.max(1, state.dettagliSessioni.length || 1);
       // tipo[] legacy = unione dei tipi delle sessioni (deduplicato, esclude vuoti)
@@ -499,7 +518,7 @@ const REV_FORMS = (function () {
       // Settings v4: extras nello step 1
       collectExtras('daily', state, 'r-');
     } else if (i === 1) {
-      state.sonnoOre     = parseFloat(document.getElementById('r-sonno')?.value) || 0;
+      state.sonnoOre     = DURATA.daMinuti(parseFloat(document.getElementById('r-sonno')?.value) || 0);
       if (core.sonnoQualita !== false)
         state.sonnoQualita = parseInt(document.getElementById('r-sonnoq')?.value) || 3;
       if (core.moodChips !== false)

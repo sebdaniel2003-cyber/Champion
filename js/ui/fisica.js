@@ -629,16 +629,16 @@
       <div class="page-header">
         <div>
           <h1 class="page-title">SON<span class="accent">NO</span></h1>
-          <div class="page-sub">Recupero · Qualità · Target ${tgt} h/notte</div>
+          <div class="page-sub">Recupero · Qualità · Target ${CS.fmtDurata(tgt)} a notte</div>
         </div>
         <button class="btn-cta btn-cta-sm" id="add-sonno">+ LOG SONNO</button>
       </div>
 
       <div class="sleep-stat-grid">
-        ${runStat('MEDIA 7GG', med7 ? med7.toFixed(1) + ' h' : '—', med7 >= tgt ? 'good' : 'warn')}
-        ${runStat('MEDIA 30GG', med30 ? med30.toFixed(1) + ' h' : '—', '')}
-        ${runStat('DEBITO 7GG', debito.toFixed(1) + ' h', debito > 0 ? 'warn' : 'good')}
-        ${runStat('TARGET', tgt + ' h', '')}
+        ${runStat('MEDIA 7GG', med7 ? CS.fmtDurataCompatta(med7) : '—', med7 >= tgt ? 'good' : 'warn')}
+        ${runStat('MEDIA 30GG', med30 ? CS.fmtDurataCompatta(med30) : '—', '')}
+        ${runStat('DEBITO 7GG', CS.fmtDurataCompatta(debito), debito > 0 ? 'warn' : 'good')}
+        ${runStat('TARGET', CS.fmtDurataCompatta(tgt), '')}
       </div>
 
       <div class="panel" style="margin-top:var(--sp-4)">
@@ -650,13 +650,13 @@
         <div class="panel correlation-box" style="margin-top:var(--sp-4)">
           <div class="panel-title">🔍 CORRELAZIONI</div>
           <div class="correlation-row">
-            <span class="corr-cond">Quando dormo < ${tgt}h</span>
+            <span class="corr-cond">Quando dormo meno di ${CS.fmtDurata(tgt)}</span>
             <span class="corr-arrow">→</span>
             <span class="corr-val">tecnica media <strong>${corr.tecnicaConPocoSonno?.toFixed(1) || '—'}/10</strong></span>
             <span class="muted">(${corr.campioneBasso} giorni)</span>
           </div>
           <div class="correlation-row">
-            <span class="corr-cond">Quando dormo ≥ ${tgt}h</span>
+            <span class="corr-cond">Quando dormo almeno ${CS.fmtDurata(tgt)}</span>
             <span class="corr-arrow">→</span>
             <span class="corr-val">tecnica media <strong>${corr.tecnicaConBuonSonno?.toFixed(1) || '—'}/10</strong></span>
             <span class="muted">(${corr.campioneAlto} giorni)</span>
@@ -687,7 +687,7 @@
     return `
       <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="width:100%;height:220px">
         <line x1="0" y1="${tgtY}" x2="${w}" y2="${tgtY}" stroke="#B45CFF" stroke-dasharray="6 4" stroke-width="1.5" opacity="0.7"/>
-        <text x="${w - 60}" y="${tgtY - 6}" fill="#B45CFF" font-size="11" font-family="JetBrains Mono">${target}h</text>
+        <text x="${w - 60}" y="${tgtY - 6}" fill="#B45CFF" font-size="11" font-family="JetBrains Mono">${CS.fmtDurataCompatta(target)}</text>
         <path d="${linePath}" stroke="#B45CFF" stroke-width="2" fill="none" stroke-linecap="round"/>
       </svg>
     `;
@@ -698,7 +698,7 @@
     const rows = list.map(s => `
       <div class="sonno-row">
         <span>${CS.fmtDate(s.data, { long: true })}</span>
-        <span>${(Number(s.ore) || 0).toFixed(1)} h</span>
+        <span>${CS.fmtDurata(Number(s.ore) || 0)}</span>
         <span>${s.qualita || '—'}/5</span>
         <span>${escapeHtml(s.note || '')}</span>
         <span></span>
@@ -716,8 +716,14 @@
       <h2 class="modal-title">LOG SONNO</h2>
       <div class="field"><label class="field-label">Data (notte di...)</label>
         <input class="input" type="date" id="s-d" value="${CS.todayISO()}"></div>
-      <div class="field"><label class="field-label">Ore di sonno</label>
-        <input class="input" type="number" step="0.1" id="s-h" placeholder="es. 7.5" autofocus></div>
+      <div class="field"><label class="field-label">Quanto hai dormito</label>
+        <div class="row" style="gap:var(--sp-2);align-items:center">
+          <input class="input" type="number" min="0" max="24" step="1" id="s-h" placeholder="7" autofocus style="flex:1">
+          <span class="field-label" style="margin:0">ore</span>
+          <input class="input" type="number" min="0" max="59" step="5" id="s-m" placeholder="30" style="flex:1">
+          <span class="field-label" style="margin:0">min</span>
+        </div>
+        <div class="field-hint" id="s-leggi"></div></div>
       <div class="field"><label class="field-label">Qualità (1-5)</label>
         <input class="input" type="number" min="1" max="5" id="s-q" placeholder="es. 4"></div>
       <div class="field"><label class="field-label">Note (opzionale)</label>
@@ -728,10 +734,21 @@
       </div>
     `;
     const m = UI.modal(html);
+
+    // Ore e minuti separati: nessuno pensa il proprio sonno come "7,5"
+    const leggiDurata = () => DURATA.daMinuti(
+      (Number(m.el.querySelector('#s-h').value) || 0) * 60 +
+      (Number(m.el.querySelector('#s-m').value) || 0));
+    const eco = () => {
+      m.el.querySelector('#s-leggi').textContent = CS.fmtDurata(leggiDurata(), { zero: '' });
+    };
+    m.el.querySelector('#s-h').addEventListener('input', eco);
+    m.el.querySelector('#s-m').addEventListener('input', eco);
+
     m.el.querySelector('#s-sv').addEventListener('click', () => {
-      const ore = parseFloat(m.el.querySelector('#s-h').value);
-      if (!ore) return UI.toast('Inserisci le ore', 'warn');
-      if (ore < 0 || ore > 24) return UI.toast('Ore di sonno fuori range (0-24)', 'warn');
+      const ore = leggiDurata();
+      if (!ore) return UI.toast('Inserisci quanto hai dormito', 'warn');
+      if (ore < 0 || ore > 24) return UI.toast('Durata fuori range (0-24 ore)', 'warn');
       // min/max sull'input non impediscono di digitare: la qualità va clampata
       // qui, altrimenti un 9 su scala 1-5 sballa medie e grafici.
       const qRaw = Number(m.el.querySelector('#s-q').value);

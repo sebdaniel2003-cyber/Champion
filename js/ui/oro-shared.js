@@ -150,7 +150,7 @@ const OroShared = (function () {
         <div class="oro-tip-grid">
           <div class="oro-tip-stat">
             <span class="oro-tip-stat-ico">⏱</span>
-            <span class="oro-tip-stat-num">${ore.toFixed(1)}<em>h</em></span>
+            <span class="oro-tip-stat-num">${CS.fmtDurataCompatta(ore)}</span>
             <span class="oro-tip-stat-lbl">Ore</span>
           </div>
           <div class="oro-tip-stat">
@@ -467,12 +467,12 @@ const OroShared = (function () {
       <div class="oro-detail-section">
         <div class="oro-detail-section-title">METRICHE DEL GIORNO</div>
         <div class="oro-detail-metrics">
-          <div class="oro-metric"><span class="oro-metric-ico">⏱</span><span class="oro-metric-k">Ore</span><span class="oro-metric-v">${(Number(rev.oreAllenamento) || 0).toFixed(1)}<em>h</em></span></div>
+          <div class="oro-metric"><span class="oro-metric-ico">⏱</span><span class="oro-metric-k">Allenamento</span><span class="oro-metric-v">${CS.fmtDurataCompatta(Number(rev.oreAllenamento) || 0)}</span></div>
           <div class="oro-metric"><span class="oro-metric-ico">🥊</span><span class="oro-metric-k">Sessioni</span><span class="oro-metric-v">${rev.sessioniGiorno || (rev.dettagliSessioni?.length || 0)}</span></div>
           <div class="oro-metric"><span class="oro-metric-ico">🎯</span><span class="oro-metric-k">Tecnica</span><span class="oro-metric-v">${rev.tecnica || '—'}<em>/10</em></span></div>
           ${rev.intensita ? `<div class="oro-metric"><span class="oro-metric-ico">🔥</span><span class="oro-metric-k">Intensità</span><span class="oro-metric-v">${rev.intensita}<em>/10</em></span></div>` : ''}
           ${rev.affaticamento ? `<div class="oro-metric"><span class="oro-metric-ico">⚡</span><span class="oro-metric-k">Affaticamento</span><span class="oro-metric-v">${rev.affaticamento}<em>/10</em></span></div>` : ''}
-          ${rev.sonnoOre ? `<div class="oro-metric"><span class="oro-metric-ico">😴</span><span class="oro-metric-k">Sonno</span><span class="oro-metric-v">${rev.sonnoOre}<em>h</em></span></div>` : ''}
+          ${rev.sonnoOre ? `<div class="oro-metric"><span class="oro-metric-ico">😴</span><span class="oro-metric-k">Sonno</span><span class="oro-metric-v">${CS.fmtDurataCompatta(rev.sonnoOre)}</span></div>` : ''}
         </div>
         <div class="oro-detail-volumes">
           <div class="oro-vol-cell"><b>${rev.flessioni || 0}</b><span>flessioni</span></div>

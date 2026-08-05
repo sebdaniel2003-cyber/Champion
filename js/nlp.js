@@ -48,6 +48,26 @@ const NLP = (function () {
     return m;
   })();
 
+  // ─── DURATE ─────────────────────────────────────────
+  // Dentro gli intent il tempo viaggia in MINUTI: è l'unità in cui lo dici
+  // («45 min») e in cui lo correggi nell'anteprima. Diventa ore decimali una
+  // volta sola, in `apply`, perché è quello il formato su disco.
+  function inMin(n) {
+    return Math.round(n.unita === 'min' ? n.valore : n.valore * 60);
+  }
+  /** Lettura in chiaro sotto l'etichetta: 90 → «1 ora e 30 min». */
+  function leggibile(min) {
+    if (typeof DURATA !== 'undefined') return DURATA.fmt(DURATA.daMinuti(min), { zero: 'da riempire' });
+    return min ? min + ' min' : 'da riempire';
+  }
+  /** Valore pronto per la scrittura: le durate tornano ore. */
+  function valoreScritto(it) {
+    if (!it.durata) return it.valore;
+    return typeof DURATA !== 'undefined'
+      ? DURATA.daMinuti(it.valore)
+      : +(((Number(it.valore) || 0) / 60).toFixed(4));
+  }
+
   // ─── NORMALIZZAZIONE ────────────────────────────────
   function norm(s) {
     return String(s || '')
@@ -103,39 +123,42 @@ const NLP = (function () {
 
   // Sinonimi: come si dicono davvero le cose, oltre all'etichetta ufficiale
   const TIPO_ALIAS = {
-    pugilato: ['boxe', 'pugilato', 'box', 'palestra di boxe'],
-    pesi:     ['sala pesi', 'pesi', 'palestra', 'sala attrezzi', 'weight'],
-    casa:     ['casa', 'a casa', 'allenamento casa', 'home'],
-    corsa:    ['corsa', 'corso', 'run', 'running', 'jogging'],
-    sparring: ['sparring', 'sparr', 'guanti'],
-    tecnica:  ['tecnica', 'solo tecnica', 'tecnico'],
+    pugilato: ['boxe', 'pugilato', 'box', 'palestra di boxe', 'pugni', 'ring', 'colpi'],
+    pesi:     ['sala pesi', 'pesi', 'palestra', 'sala attrezzi', 'weight', 'bilanciere',
+               'manubri', 'ferri', 'panca'],
+    casa:     ['casa', 'a casa', 'allenamento casa', 'home', 'in camera', 'a corpo libero'],
+    corsa:    ['corsa', 'corso', 'run', 'running', 'jogging', 'corsetta', 'camminata',
+               'passeggiata', 'giro di corsa', 'fondo'],
+    sparring: ['sparring', 'sparr', 'guanti', 'incontro', 'match'],
+    tecnica:  ['tecnica', 'solo tecnica', 'tecnico', 'riscaldamento', 'stretching',
+               'defaticamento', 'mobilita', 'allungamento'],
   };
   const MOOD_ALIAS = {
-    feroce: ['feroce', 'carico', 'carica'],
-    fiamme: ['in fiamme', 'fiamme', 'fuoco'],
-    determinato: ['determinato', 'determinata', 'motivato'],
-    normale: ['normale', 'cosi cosi'],
-    stanco: ['stanco', 'stanca', 'distrutto', 'morto', 'esausto'],
-    frustrato: ['frustrato', 'incazzato', 'arrabbiato', 'nervoso'],
-    senzaVoglia: ['senza voglia', 'svogliato', 'demotivato'],
-    distratto: ['distratto', 'sbadato'],
-    ansioso: ['ansioso', 'ansia', 'agitato'],
-    concentrato: ['concentrato', 'lucido', 'focus'],
+    feroce: ['feroce', 'carico', 'carica', 'una bestia', 'a mille'],
+    fiamme: ['in fiamme', 'fiamme', 'fuoco', 'on fire'],
+    determinato: ['determinato', 'determinata', 'motivato', 'motivata', 'deciso'],
+    normale: ['normale', 'cosi cosi', 'nella media', 'niente di che'],
+    stanco: ['stanco', 'stanca', 'distrutto', 'morto', 'esausto', 'a pezzi', 'cotto', 'fuso'],
+    frustrato: ['frustrato', 'incazzato', 'arrabbiato', 'nervoso', 'furioso'],
+    senzaVoglia: ['senza voglia', 'svogliato', 'demotivato', 'controvoglia', 'senza stimoli'],
+    distratto: ['distratto', 'sbadato', 'con la testa altrove'],
+    ansioso: ['ansioso', 'ansia', 'agitato', 'teso'],
+    concentrato: ['concentrato', 'lucido', 'focus', 'sul pezzo'],
   };
   const AREA_ALIAS = {
-    'Jab': ['jab', 'sinistro'],
-    'Diretto': ['diretto', 'destro'],
+    'Jab': ['jab', 'sinistro', 'jeb', 'diretto sinistro'],
+    'Diretto': ['diretto', 'destro', 'due', 'cross'],
     'Gancio': ['gancio', 'ganci', 'hook'],
     'Montante': ['montante', 'montanti', 'uppercut'],
-    'Difesa': ['difesa', 'difese', 'guardia'],
-    'Cambio Ritmo': ['cambio ritmo', 'ritmo', 'cambio di ritmo'],
-    'Distanza': ['distanza', 'misura'],
-    'Footwork': ['footwork', 'gambe', 'piedi', 'spostamenti'],
-    'Combinazioni': ['combinazioni', 'combinazione', 'combo'],
-    'Potenza': ['potenza', 'forza dei colpi'],
-    'Resistenza': ['resistenza', 'fiato', 'tenuta'],
-    'Velocità': ['velocita', 'rapidita'],
-    'Testa': ['testa', 'mentale', 'lucidita'],
+    'Difesa': ['difesa', 'difese', 'guardia', 'schivate', 'schivata', 'parate', 'slip'],
+    'Cambio Ritmo': ['cambio ritmo', 'ritmo', 'cambio di ritmo', 'cambi di ritmo'],
+    'Distanza': ['distanza', 'misura', 'gestione della distanza'],
+    'Footwork': ['footwork', 'gambe', 'piedi', 'spostamenti', 'movimento', 'passo'],
+    'Combinazioni': ['combinazioni', 'combinazione', 'combo', 'serie'],
+    'Potenza': ['potenza', 'forza dei colpi', 'forza', 'colpo pesante'],
+    'Resistenza': ['resistenza', 'fiato', 'tenuta', 'condizione', 'gas'],
+    'Velocità': ['velocita', 'rapidita', 'esplosivita', 'mani veloci'],
+    'Testa': ['testa', 'mentale', 'lucidita', 'freddezza', 'concentrazione'],
   };
   // Un fondamentale non è un "tipo di allenamento", ma se dici quante ore ci hai
   // messo è comunque tempo allenato: lo si registra come sessione del tipo più vicino.
@@ -146,9 +169,9 @@ const NLP = (function () {
   };
 
   const FOND_ALIAS = {
-    'Sacco': ['sacco', 'sacchi', 'heavy bag'],
-    'Corda': ['corda', 'saltelli', 'salto della corda'],
-    'Vuoto Normale': ['vuoto normale', 'vuoto', 'shadow', 'shadow boxing', 'a vuoto'],
+    'Sacco': ['sacco', 'sacchi', 'heavy bag', 'al sacco', 'sacco pesante'],
+    'Corda': ['corda', 'saltelli', 'salto della corda', 'saltare la corda', 'cordicella'],
+    'Vuoto Normale': ['vuoto normale', 'vuoto', 'shadow', 'shadow boxing', 'a vuoto', 'ombra'],
     'Vuoto Pesi': ['vuoto pesi', 'vuoto con pesi', 'vuoto coi pesi'],
     'Sparring': ['sparring', 'sparr'],
     'Figure': ['figure', 'colpitori', 'guantoni', 'maestro'],
@@ -182,7 +205,11 @@ const NLP = (function () {
 
     const shift = (giorni) => { const d = new Date(oggi); d.setDate(d.getDate() - giorni); return iso(d); };
 
+    // L'ordine conta: "dopodomani" contiene "domani", "l'altro ieri" contiene
+    // "ieri". Vince la prima che combacia, quindi le più lunghe stanno sopra.
     const patterns = [
+      [/\bdopodomani\b/,       () => shift(-2)],
+      [/\bdomani\b/,           () => shift(-1)],
       [/\bl\s*altro\s*ieri\b/, () => shift(2)],
       [/\bavantieri\b/,        () => shift(2)],
       [/\bieri\b/,             () => shift(1)],
@@ -191,6 +218,20 @@ const NLP = (function () {
     ];
     for (const [re, fn] of patterns) {
       if (re.test(t)) { data = fn(); t = t.replace(re, ' '); trovata = true; break; }
+    }
+
+    // "3 giorni fa", "una settimana fa", "due settimane fa", "un mese fa"
+    if (!trovata) {
+      const numWordRe = Object.keys(NUM_WORDS).sort((a, b) => b.length - a.length).join('|');
+      const m = t.match(new RegExp(
+        '\\b(?:(' + numWordRe + ')|(\\d{1,3}))\\s+(giorn[oi]|settiman[ae]|mes[ei])\\s+fa\\b'));
+      if (m) {
+        const quanti = m[1] != null ? NUM_WORDS[m[1]] : Number(m[2]);
+        const passo = /^giorn/.test(m[3]) ? 1 : /^settiman/.test(m[3]) ? 7 : 30;
+        data = shift(quanti * passo);
+        t = t.replace(m[0], ' ');
+        trovata = true;
+      }
     }
 
     // "lunedì", "sabato" → l'occorrenza più recente nel passato
@@ -206,12 +247,16 @@ const NLP = (function () {
       }
     }
 
-    // "il 3 agosto" / "3 agosto"
+    // "il 3 agosto" / "3 agosto" / "il primo agosto" / "12 marzo 2025"
     if (!trovata) {
-      const m = t.match(new RegExp('\\b(\\d{1,2})\\s+(' + MESI.join('|') + ')\\b'));
+      const m = t.match(new RegExp(
+        '\\b(primo|\\d{1,2})\\s+(' + MESI.join('|') + ')(?:\\s+(\\d{4}))?\\b'));
       if (m) {
-        const d = new Date(oggi.getFullYear(), MESI.indexOf(m[2]), Number(m[1]));
-        if (d > oggi) d.setFullYear(d.getFullYear() - 1);
+        const giorno = m[1] === 'primo' ? 1 : Number(m[1]);
+        const d = new Date(m[3] ? Number(m[3]) : oggi.getFullYear(), MESI.indexOf(m[2]), giorno);
+        // Senza anno vale l'occorrenza passata: un diario racconta ciò che è
+        // già successo. Con l'anno scritto si prende quello, e basta.
+        if (!m[3] && d > oggi) d.setFullYear(d.getFullYear() - 1);
         data = iso(d); t = t.replace(m[0], ' '); trovata = true;
       }
     }
@@ -228,6 +273,21 @@ const NLP = (function () {
           const y = m[3] ? (m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3])) : oggi.getFullYear();
           const d = new Date(y, mm - 1, gg);
           if (!isNaN(d)) { data = iso(d); t = t.replace(m[0], ' '); trovata = true; }
+        }
+      }
+    }
+
+    // "il 12" da solo → giorno del mese corrente (o del mese scorso se non è
+    // ancora arrivato). La negazione esclude i casi in cui quel numero è una
+    // quantità e non una data: "il 12 di sacco" non è il dodici del mese.
+    if (!trovata) {
+      const m = t.match(/\b(?:il|lo)\s+(\d{1,2})\b(?!\s*(?:min|minut|or[ae]|km|kg|g|grammi|rip|volte|flession|squat|addominal|punti|voto))/);
+      if (m) {
+        const gg = Number(m[1]);
+        if (gg >= 1 && gg <= 31) {
+          const d = new Date(oggi.getFullYear(), oggi.getMonth(), gg);
+          if (d > oggi) d.setMonth(d.getMonth() - 1);
+          data = iso(d); t = t.replace(m[0], ' '); trovata = true;
         }
       }
     }
@@ -293,17 +353,35 @@ const NLP = (function () {
 
   // "due ore e mezza" sono due numeri (2 e 0.5) ma un solo valore: 2.5.
   // Senza questa fusione diventerebbero due sessioni separate.
+  // Stessa cosa per "un'ora e 30", che è una durata sola: 90 minuti.
   function mergeMezz(t, nums) {
     const out = [];
     for (let i = 0; i < nums.length; i++) {
       const n = nums[i], next = nums[i + 1];
-      if (next && next.valore === 0.5 && !next.unita &&
-          /^\s*e\s*$/.test(t.slice(n.end, next.start))) {
+      const congiunte = next && !next.unita && /^\s*e\s*$/.test(t.slice(n.end, next.start));
+      if (congiunte && next.valore === 0.5) {
         out.push({ valore: n.valore + 0.5, unita: n.unita, start: n.start, end: next.end });
         i++;                                  // consuma anche "mezza"
+      } else if (congiunte && n.unita === 'h' && next.valore >= 1 && next.valore < 60) {
+        // "1 ora e 30" → 90 minuti, non un'ora e poi un trenta per aria
+        out.push({ valore: n.valore * 60 + next.valore, unita: 'min', start: n.start, end: next.end });
+        i++;
       } else out.push(n);
     }
     return out;
+  }
+
+  // Modi di dire che nascondono un numero. Si riscrivono in forma canonica
+  // PRIMA di cercare i numeri, così il resto del parser non deve saperne nulla.
+  function normalizzaDurate(t) {
+    return t
+      .replace(/\borett[ae]\b/g, m => (m === 'orette' ? 'ore' : 'ora'))
+      .replace(/\btre\s+quarti\s+d\s*ora\b/g, '45 min')
+      .replace(/\b(?:un|1)\s+quarto\s+d\s*ora\b/g, '15 min')
+      .replace(/\bmezz\s*ora\b/g, '30 min')
+      .replace(/\bmezzora\b/g, '30 min')
+      // "un'ora" diventa "un ora" dopo la normalizzazione: qui torna un numero
+      .replace(/\bun\s+ora\b/g, '1 ora');
   }
 
   const escRe = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -314,10 +392,32 @@ const NLP = (function () {
   const BOUND_R = '([\\s,;.:!?()-]|$)';
   function wordRe(w) { return new RegExp(BOUND_L + escRe(w) + BOUND_R); }
 
+  // In italiano il plurale cambia l'ultima vocale ("gancio" → "ganci",
+  // "sacco" → "sacchi"): confrontando le radici, un alias scritto al singolare
+  // riconosce anche il plurale senza doverli elencare tutti.
+  const IRREGOLARI = { uova: 'uovo', dita: 'dito', braccia: 'braccio', ginocchia: 'ginocchio' };
+  function radice(p) {
+    const w = IRREGOLARI[p] || p;
+    return w.replace(/(chi|che|ghi|ghe)$/, 'c')   // sacchi → sac, panche → panc
+            .replace(/[aeio]$/, '');              // ganci → ganc, gancio → ganci→ganc
+  }
+
+  /** Le parole del testo che hanno la stessa radice della voce cercata. */
+  function stessaRadice(testo, alias) {
+    if (alias.length < 4 || alias.includes(' ')) return null;
+    const r = radice(alias);
+    if (r.length < 3) return null;
+    const re = new RegExp(BOUND_L + escRe(r) + '[a-z]{0,3}' + BOUND_R);
+    const m = testo.match(re);
+    if (!m) return null;
+    return { pos: m.index + m[1].length, match: m[0].trim() };
+  }
+
   // Cerca l'alias più specifico presente nel testo.
   // Ritorna { voce, match, pos } dove pos è l'inizio REALE della parola.
   function findVoce(testo, voci) {
     let best = null;
+    let ripiego = null;                    // per radice: vale solo se non c'è di meglio
     for (const v of voci) {
       for (const a of v.alias) {
         if (!a) continue;
@@ -325,10 +425,16 @@ const NLP = (function () {
         if (m) {
           const pos = m.index + m[1].length;
           if (!best || a.length > best.match.length) best = { voce: v, match: a, pos };
+          continue;
+        }
+        if (best) continue;
+        const r = stessaRadice(testo, a);
+        if (r && (!ripiego || a.length > ripiego.match.length)) {
+          ripiego = { voce: v, match: r.match, pos: r.pos };
         }
       }
     }
-    return best;
+    return best || ripiego;
   }
 
   // Cerca una parola chiave SOLO se è a ridosso del numero. Serve contro le
@@ -345,6 +451,10 @@ const NLP = (function () {
     return null;
   }
 
+  const KW_SESSIONE = ['sessione', 'sessioni', 'seduta', 'sedute', 'allenamento', 'allenamenti'];
+  // Verbi che raccontano un allenamento fatto: bastano a creare una sessione
+  // anche quando non è stato detto nessun numero ("oggi ho fatto sparring").
+  const KW_FATTO = /\b(ho fatto|fatto|ho tirato|tirato|mi sono allenato|allenato|ho fatto una sessione di|seduta di)\b/;
   const KW_SONNO = ['dormito', 'dormite', 'dormita', 'sonno', 'notte', 'riposato'];
   const KW_PESO  = ['peso', 'pesato', 'pesata', 'bilancia', 'peso corporeo'];
 
@@ -405,11 +515,12 @@ const NLP = (function () {
   // ─── PARSE ──────────────────────────────────────────
   function parse(testoOriginale) {
     const V = buildVocab();
-    const grezzo = norm(testoOriginale);
+    const grezzo = normalizzaDurate(norm(testoOriginale));
     const { data, testo } = extractDate(grezzo);
 
     const intents = [];
     const consumati = [];              // span [start,end] già interpretati
+    const usati = new Set();           // indici di numeri già assorbiti da un'altra regola
     const nums = mergeMezz(testo, findNumbers(testo));
 
     const pushIntent = (it, span) => {
@@ -425,9 +536,38 @@ const NLP = (function () {
                     : /\bspuntino\b|\bmerenda\b/.test(testo) ? 'spuntino' : 'pranzo';
 
     for (let i = 0; i < nums.length; i++) {
+      if (usati.has(i)) continue;        // già assorbito (es. la durata di "3 sessioni da 45 min")
       const n = nums[i];
       const ctx = contextOf(testo, nums, i);
       const span = [n.start, n.end];
+
+      // ── QUANTE SESSIONI ──
+      // "una sessione di allenamento", "due sessioni di pugilato",
+      // "tre sessioni da 45 min". Il numero conta le sessioni, non le ore.
+      if (!n.unita && Number.isInteger(n.valore) && n.valore >= 1 && n.valore <= 10 &&
+          kwNear(ctx, KW_SESSIONE, 2)) {
+        const tipo = resolve(ctx, s => findVoce(s, V.tipi));
+        // "da 45 min" più avanti nella frase: è la durata di ognuna
+        let minuti = 0;
+        for (let k = i + 1; k < nums.length; k++) {
+          if (nums[k].unita === 'h' || nums[k].unita === 'min') {
+            minuti = inMin(nums[k]);
+            usati.add(k);
+            consumati.push([nums[k].start, nums[k].end]);
+            break;
+          }
+        }
+        for (let s = 0; s < n.valore; s++) {
+          pushIntent({
+            target: 'sessione', campo: tipo ? tipo.voce.id : '', valore: minuti, unita: 'min',
+            durata: true, sub: leggibile(minuti),
+            label: 'Sessione' + (tipo ? ' · ' + tipo.voce.label : ''),
+            icona: tipo ? tipo.voce.icon : '🥊',
+            confidenza: minuti ? 'alta' : 'media',
+          }, s === 0 ? span : null);
+        }
+        continue;
+      }
 
       // ── VOTO su area o fondamentale ──
       // "velocità voto 7" / "voto 7 al sacco" / "sacco 8 su 10"
@@ -480,10 +620,11 @@ const NLP = (function () {
       }
 
       // ── SONNO ──
-      if ((n.unita === 'h' || !n.unita) && kwNear(ctx, KW_SONNO, 1)) {
+      if ((n.unita === 'h' || n.unita === 'min' || !n.unita) && kwNear(ctx, KW_SONNO, 1)) {
+        const min = inMin(n);
         pushIntent({
-          target: 'sonno', campo: 'ore', valore: n.valore, unita: 'h',
-          label: 'Ore di sonno', icona: '🌙', confidenza: 'alta',
+          target: 'sonno', campo: 'ore', valore: min, unita: 'min', durata: true,
+          label: 'Sonno', sub: leggibile(min), icona: '🌙', confidenza: 'alta',
         }, span);
         continue;
       }
@@ -514,16 +655,19 @@ const NLP = (function () {
         continue;
       }
 
-      // ── ORE: sessione di un tipo, oppure totale allenamento ──
+      // ── DURATE: sessione di un tipo, oppure totale allenamento ──
       if (n.unita === 'h' || n.unita === 'min') {
-        const ore = n.unita === 'min' ? +(n.valore / 60).toFixed(2) : n.valore;
+        const minuti = inMin(n);
 
         // metrica extra attivata dall'utente (es. "20 minuti meditazione")
         const extra = V.extras.find(e => wordRe(norm(e.label)).test(ctx.dopo || ctx.tutto));
         if (extra) {
+          const eDurata = extra.unit === 'h';
           pushIntent({
             target: 'revisione', campo: extra.key,
-            valore: extra.unit === 'h' ? ore : n.valore, unita: extra.unit || '',
+            valore: eDurata ? minuti : n.valore,
+            unita: eDurata ? 'min' : (extra.unit || ''),
+            durata: eDurata, sub: eDurata ? leggibile(minuti) : '',
             label: extra.label, icona: extra.icon || '📌', confidenza: 'alta',
           }, span);
           continue;
@@ -534,13 +678,14 @@ const NLP = (function () {
 
         if (tipo) {
           pushIntent({
-            target: 'sessione', campo: tipo.voce.id, valore: ore, unita: 'h',
+            target: 'sessione', campo: tipo.voce.id, valore: minuti, unita: 'min',
+            durata: true, sub: leggibile(minuti),
             label: 'Sessione · ' + tipo.voce.label, icona: tipo.voce.icon, confidenza: 'alta',
           }, span);
           continue;
         }
 
-        // Ore riferite a un FONDAMENTALE ("30 minuti di corda", "1 ora di sacco"):
+        // Durata riferita a un FONDAMENTALE ("30 minuti di corda", "1 ora di sacco"):
         // è comunque tempo di allenamento, lo si registra come sessione del tipo
         // più vicino, dichiarandolo nell'etichetta.
         const f = resolve(ctx, s => findVoce(s, V.fond));
@@ -548,7 +693,8 @@ const NLP = (function () {
           const tipoId = FOND_TO_TIPO[f.voce.nome] || 'tecnica';
           const t = V.tipi.find(x => x.id === tipoId) || { id: tipoId, label: tipoId, icon: '🥊' };
           pushIntent({
-            target: 'sessione', campo: t.id, valore: ore, unita: 'h',
+            target: 'sessione', campo: t.id, valore: minuti, unita: 'min',
+            durata: true, sub: leggibile(minuti),
             label: `Sessione · ${t.label} (${f.voce.nome.toLowerCase()})`,
             icona: t.icon, confidenza: 'media',
           }, span);
@@ -557,8 +703,9 @@ const NLP = (function () {
 
         if (generico || /\ballenament|\btotale\b/.test(ctx.tutto)) {
           pushIntent({
-            target: 'revisione', campo: 'oreAllenamento', valore: ore, unita: 'h',
-            label: 'Ore allenamento (totale)', icona: '⏱', confidenza: 'alta',
+            target: 'revisione', campo: 'oreAllenamento', valore: minuti, unita: 'min',
+            durata: true, sub: leggibile(minuti),
+            label: 'Allenamento (totale)', icona: '⏱', confidenza: 'alta',
           }, span);
           continue;
         }
@@ -581,6 +728,28 @@ const NLP = (function () {
           }, span);
         }
         continue;
+      }
+    }
+
+    // ── SESSIONE SENZA NUMERI ──
+    // "oggi ho fatto sparring": non c'è nessuna cifra, ma un allenamento c'è.
+    // Nasce a durata vuota, che l'anteprima chiede di riempire — meglio di
+    // inventare un'ora che non hai fatto.
+    const giaAllenamento = intents.some(x =>
+      x.target === 'sessione' || (x.target === 'revisione' && x.campo === 'oreAllenamento'));
+    if (!giaAllenamento && KW_FATTO.test(testo)) {
+      const t = findVoce(testo, V.tipi);
+      const f = t ? null : findVoce(testo, V.fond);
+      const voce = t ? t.voce
+                     : f ? (V.tipi.find(x => x.id === (FOND_TO_TIPO[f.voce.nome] || 'tecnica')) || null)
+                         : null;
+      if (voce) {
+        pushIntent({
+          target: 'sessione', campo: voce.id, valore: 0, unita: 'min',
+          durata: true, sub: leggibile(0),
+          label: 'Sessione · ' + voce.label + (f ? ` (${f.voce.nome.toLowerCase()})` : ''),
+          icona: voce.icon, confidenza: 'media',
+        }, null);
       }
     }
 
@@ -661,14 +830,14 @@ const NLP = (function () {
             if (it.campo === 'mood') {
               rev.mood = [...new Set([...(rev.mood || []), it.valore])];
             } else {
-              rev[it.campo] = it.valore;
+              rev[it.campo] = valoreScritto(it);
             }
             revTocca = true; ok++;
             break;
 
           case 'sessione': {
             rev.dettagliSessioni = rev.dettagliSessioni || [];
-            rev.dettagliSessioni.push({ ore: it.valore, tipo: it.campo });
+            rev.dettagliSessioni.push({ ore: valoreScritto(it), tipo: it.campo });
             rev.sessioniGiorno = rev.dettagliSessioni.length;
             rev.tipo = [...new Set(rev.dettagliSessioni.map(s => s.tipo))];
             revTocca = true; ok++;
@@ -680,7 +849,7 @@ const NLP = (function () {
             ok++; break;
 
           case 'sonno':
-            CS.addSonno({ data, ore: it.valore, qualita: 3, note: 'da assistente' });
+            CS.addSonno({ data, ore: valoreScritto(it), qualita: 3, note: 'da assistente' });
             ok++; break;
 
           case 'corsa':

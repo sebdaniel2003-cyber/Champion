@@ -1128,7 +1128,7 @@
         <div class="session-card-bar"><span class="session-card-bar-fill" style="--w:${(intStrength * 100).toFixed(0)}%"></span></div>
         <div class="session-head">
           <div class="session-head-left">
-            <div class="session-date">${CS.fmtDate(s.data, { long: true })} ${s.oraInizio ? '· ' + s.oraInizio : ''} ${s.oraFine ? '–' + s.oraFine : ''} ${durata ? '· ' + durata.toFixed(1) + 'h' : ''}</div>
+            <div class="session-date">${CS.fmtDate(s.data, { long: true })} ${s.oraInizio ? '· ' + s.oraInizio : ''} ${s.oraFine ? '–' + s.oraFine : ''} ${durata ? '· ' + CS.fmtDurata(durata) : ''}</div>
             <div class="session-meta-row">
               ${tipo ? `<span class="session-tipo">${escapeHtml(tipo)}</span>` : ''}
               ${s.luogo ? `<span class="session-luogo">📍 ${escapeHtml(s.luogo)}</span>` : ''}

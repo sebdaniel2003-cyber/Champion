@@ -193,7 +193,7 @@ const CALC = (function () {
     const addo = Number(rev.addominali) || 0;
     const volumeMet = fless >= tgtFless && squat >= tgtSquat && addo >= tgtAddo;
     const criteri = [
-      { id: 'ore', label: `≥${oreMin}h allenamento`, met: ore >= oreMin, cur: ore, tgt: oreMin },
+      { id: 'ore', label: `≥${CS.fmtDurata(oreMin)} di allenamento`, met: ore >= oreMin, cur: ore, tgt: oreMin },
       { id: 'sess', label: '≥2 sessioni', met: sess >= 2, cur: sess, tgt: 2 },
       { id: 'tec', label: 'Tecnica ≥8', met: tec >= 8, cur: tec, tgt: 8 },
       { id: 'vol', label: `Volume ${tgtFless}/${tgtSquat}/${tgtAddo}`, met: volumeMet, cur: `${fless}/${squat}/${addo}`, tgt: `${tgtFless}/${tgtSquat}/${tgtAddo}` },
@@ -241,7 +241,7 @@ const CALC = (function () {
 
     const criteri = [
       { id: 'giorni', label: `Allenamento ≥${c.giorniAllenamento}gg/7`, met: giorniAllen >= c.giorniAllenamento, val: `${giorniAllen}/7` },
-      { id: 'ore', label: `≥${c.oreMinime}h/giorno`, met: giorniConOreOK >= c.giorniAllenamento, val: `${giorniConOreOK}/${c.giorniAllenamento}` },
+      { id: 'ore', label: `≥${CS.fmtDurata(c.oreMinime)} al giorno`, met: giorniConOreOK >= c.giorniAllenamento, val: `${giorniConOreOK}/${c.giorniAllenamento}` },
       { id: 'sess', label: '≥2 sessioni ≥4gg/7', met: giorniConSess >= 4, val: `${giorniConSess}/4` },
       { id: 'volumi', label: `Volume target 6gg/7`, met: giorniConVolumi >= c.giorniAllenamento, val: `${giorniConVolumi}/${c.giorniAllenamento}` },
       { id: 'corse', label: `Corsa ≥${c.corseSett}/sett`, met: corse >= c.corseSett, val: `${corse}/${c.corseSett}` },

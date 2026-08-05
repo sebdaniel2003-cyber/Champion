@@ -97,7 +97,7 @@ const ASSISTANT = (function () {
     // STATO — chips strutturate (renderizzate come pill dal layer UI)
     const chips = [];
     const ot = C.state.oreVsTarget;
-    if (ot) chips.push({ k: 'SETT', v: `${ot.ore.toFixed(1)}h/${ot.target}h` });
+    if (ot) chips.push({ k: 'SETT', v: `${CS.fmtDurataCompatta(ot.ore)}/${CS.fmtDurataCompatta(ot.target)}` });
     if (C.state.sett) chips.push({ k: 'ORO', v: `${C.state.sett.met}/${C.state.sett.criteri.length}`, gold: C.state.sett.met >= 4 });
     if (C.state.streak > 0) chips.push({ k: 'STREAK', v: `${C.state.streak}g` });
     if (C.state.pesoCurrent) {
@@ -269,7 +269,7 @@ const ASSISTANT = (function () {
         CS.state.targetSett.oreAllenamento = ore;
         CS.save();
         m.close();
-        UI.toast(`Target ${ore}h/sett`, 'ok');
+        UI.toast(`Target ${CS.fmtDurata(ore)} a settimana`, 'ok');
         evaluate();
       });
       return;

@@ -141,7 +141,7 @@ const APP = (function () {
         <span class="ctx-eta">${CTX.etaMinuti() < 60 ? 'aggiornato' : 'dal PC ' + fmtEta()}</span>
       </div>
       <div class="ctx-numeri">
-        ${cella('⏱', (o.oreAllenamento || 0) + 'h', 'allenamento')}
+        ${cella('⏱', DURATA.compatta(o.oreAllenamento || 0), 'allenamento')}
         ${cella('🥊', String(o.sessioni || 0), 'sessioni')}
         ${cella('⚖', c.ultimoPeso ? c.ultimoPeso.kg + 'kg' : '—', 'ultimo peso')}
         ${cella('🏃', (o.kmCorsa || 0) + 'km', 'corsa')}
@@ -150,8 +150,44 @@ const APP = (function () {
         ${barra('Calorie', o.kcal || 0, t.kcal, ' kcal')}
         ${barra('Proteine', o.pro || 0, t.pro, ' g')}
       </div>` : ''}
+      ${renderOro(c.oro)}
+      ${renderObiettivi(c.obiettivi)}
       ${inCoda ? `<div class="ctx-coda">📦 ${inCoda} ${inCoda === 1 ? 'frase in attesa di rete' : 'frasi in attesa di rete'}</div>` : ''}
     `;
+  }
+
+  /** La settimana d'oro: non un punteggio, ma cosa manca ancora. */
+  function renderOro(oro) {
+    if (!oro || !oro.totali) return '';
+    if (oro.gold) {
+      return `<div class="ctx-oro is-gold">◆ SETTIMANA D'ORO COMPLETA</div>`;
+    }
+    const manca = oro.mancanti.slice(0, 2)
+      .map(m => `${esc(m.label)} <b>${esc(m.val)}</b>`).join(' · ');
+    return `
+      <div class="ctx-oro">
+        <div class="ctx-oro-head">
+          <span>SETTIMANA D'ORO</span><b>${oro.fatti}/${oro.totali}</b>
+        </div>
+        ${manca ? `<div class="ctx-oro-manca">manca: ${manca}</div>` : ''}
+      </div>`;
+  }
+
+  /** I due obiettivi più vicini al traguardo: quelli su cui vale la pena spingere. */
+  function renderObiettivi(lista) {
+    if (!Array.isArray(lista) || !lista.length) return '';
+    const top = [...lista].sort((a, b) => b.pct - a.pct).slice(0, 2);
+    return `
+      <div class="ctx-obj">
+        ${top.map(o => `
+          <div class="ctx-obj-row">
+            <div class="ctx-obj-top">
+              <span>${esc(o.descrizione || '—')}</span>
+              <b>${o.pct}%</b>
+            </div>
+            <div class="ctx-macro-bar"><span style="width:${Math.min(100, o.pct)}%"></span></div>
+          </div>`).join('')}
+      </div>`;
   }
 
   function cella(ico, val, lbl) {
@@ -267,7 +303,8 @@ const APP = (function () {
         </div>
         <div class="riga-val">
           ${numerico
-            ? `<input class="riga-input" type="number" inputmode="decimal" step="0.1"
+            ? `<input class="riga-input" type="number" inputmode="${it.durata ? 'numeric' : 'decimal'}"
+                 step="${it.durata ? 5 : 0.1}" min="0"
                  value="${it.valore}" data-i="${i}" aria-label="valore">`
             : `<span class="riga-fisso">${esc(it.valore)}</span>`}
           <span class="riga-unita">${esc(it.unita || '')}</span>
@@ -363,10 +400,17 @@ const APP = (function () {
     host.querySelectorAll('.riga-input').forEach(inp => {
       inp.addEventListener('input', () => {
         const it = parsed.intents[Number(inp.dataset.i)];
-        if (!it || it.target !== 'pasti' || !it.alimento) return;
-        const m = NLP.macrosPer(it.alimento, parseFloat(inp.value) || 0);
+        if (!it) return;
         const sub = host.querySelector(`[data-sub="${inp.dataset.i}"]`);
-        if (sub) sub.textContent = `${m.kcal} kcal · ${m.pro}g pro · ${m.carb}g carb · ${m.fat}g gr`;
+        if (!sub) return;
+        // La lettura in chiaro segue quello che scrivi: correggi 90 e sotto
+        // leggi subito «1 ora e 30 min», senza dover fare il conto in testa.
+        if (it.durata) {
+          sub.textContent = DURATA.fmt(DURATA.daMinuti(parseFloat(inp.value) || 0), { zero: 'da riempire' });
+        } else if (it.target === 'pasti' && it.alimento) {
+          const m = NLP.macrosPer(it.alimento, parseFloat(inp.value) || 0);
+          sub.textContent = `${m.kcal} kcal · ${m.pro}g pro · ${m.carb}g carb · ${m.fat}g gr`;
+        }
       });
     });
     host.querySelectorAll('.riga-alt').forEach(sel => {

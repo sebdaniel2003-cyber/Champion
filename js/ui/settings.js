@@ -582,6 +582,23 @@ const SETTINGS_UI = (function () {
             <button class="btn primary" id="sy-ora">SINCRONIZZA ORA</button>
           </div>
         </div>
+
+        <div class="settings-card">
+          <div class="settings-toggle-row">
+            <div class="settings-toggle-meta">
+              <div class="settings-toggle-name">Applica da solo quello che hai già confermato sul telefono</div>
+              <div class="settings-toggle-sub">
+                Registra senza chiedertelo una seconda volta, ma <b>solo</b> le frasi in cui
+                ha capito tutto con certezza. Quelle con anche una voce incerta restano
+                comunque qui in attesa.
+              </div>
+            </div>
+            <label class="settings-switch">
+              <input type="checkbox" id="sy-auto" ${cfg.autoApplica ? 'checked' : ''}>
+              <span class="settings-switch-slider"></span>
+            </label>
+          </div>
+        </div>
       ` : `
         <div class="settings-card">
           <div class="settings-section-title settings-card-title">ENTRA</div>
@@ -649,10 +666,21 @@ const SETTINGS_UI = (function () {
         url: (pane.querySelector('#sy-url')?.value || url).trim(),
         key: (pane.querySelector('#sy-key')?.value || key).trim(),
         enabled: pane.querySelector('#sy-on') ? pane.querySelector('#sy-on').checked : true,
+        autoApplica: pane.querySelector('#sy-auto')
+          ? pane.querySelector('#sy-auto').checked : !!cfg.autoApplica,
         lastEmail: cfg.lastEmail,
         ultimoPush: cfg.ultimoPush,
       };
     }
+
+    // L'interruttore dell'applicazione automatica salva da sé: è una scelta
+    // sola e chiedere anche un SALVA sarebbe un passaggio di troppo.
+    pane.querySelector('#sy-auto')?.addEventListener('change', (e) => {
+      SYNC.saveCfg(leggiCfg());
+      UI.toast(e.target.checked
+        ? 'Le frasi capite con certezza verranno registrate da sole'
+        : 'Tornerai a confermare tu ogni frase', 'ok');
+    });
 
     // La configurazione dev'essere salvata prima di qualunque chiamata
     function assicuraCfg() {

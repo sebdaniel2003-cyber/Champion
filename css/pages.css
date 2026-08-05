@@ -12343,3 +12343,16 @@ canvas.chart { width: 100% !important; height: 240px !important; }
 .sync-adv > summary::before { content: '\25B8  '; }
 .sync-adv[open] > summary::before { content: '\25BE  '; }
 .sync-adv > summary:hover { color: var(--neon); }
+
+/* ═══ v8.7 — DURATE IN MINUTI ═══
+   I campi di durata si scrivono in minuti; sotto, in piccolo, la lettura
+   in chiaro ("1 ora e 30 min") che segue quello che digiti. Serve a non
+   dover fare il conto in testa mentre compili. */
+.rev-sess-ore-eco {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text-mute);
+  margin-top: 4px;
+  min-height: 13px;
+}
