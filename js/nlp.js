@@ -358,12 +358,17 @@ const NLP = (function () {
     const out = [];
     for (let i = 0; i < nums.length; i++) {
       const n = nums[i], next = nums[i + 1];
-      const congiunte = next && !next.unita && /^\s*e\s*$/.test(t.slice(n.end, next.start));
-      if (congiunte && next.valore === 0.5) {
+      // "e" fra i due numeri: "un'ora e mezza", "1 ora e 30", "1 ora e 30 min"
+      const congiunte = next && /^\s*e\s*$/.test(t.slice(n.end, next.start));
+      if (congiunte && !next.unita && next.valore === 0.5) {
         out.push({ valore: n.valore + 0.5, unita: n.unita, start: n.start, end: next.end });
         i++;                                  // consuma anche "mezza"
-      } else if (congiunte && n.unita === 'h' && next.valore >= 1 && next.valore < 60) {
-        // "1 ora e 30" → 90 minuti, non un'ora e poi un trenta per aria
+      } else if (congiunte && n.unita === 'h' &&
+                 (!next.unita || next.unita === 'min') &&
+                 next.valore >= 1 && next.valore < 60) {
+        // Una durata sola, non due: "1 ora e 30 min" sono 90 minuti. Senza
+        // questa fusione l'ora restava orfana (nessuna parola le si riferiva)
+        // e finiva scartata, lasciando a schermo i soli 30 minuti.
         out.push({ valore: n.valore * 60 + next.valore, unita: 'min', start: n.start, end: next.end });
         i++;
       } else out.push(n);

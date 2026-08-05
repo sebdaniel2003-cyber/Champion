@@ -14,7 +14,7 @@ const APP = (function () {
 
   // Va tenuta allineata a VERSIONE in sw.js: è quella che vedi in alto e che
   // dice a colpo d'occhio se il telefono sta girando l'ultima versione.
-  const VERSIONE_APP = '8.7.1';
+  const VERSIONE_APP = '8.7.2';
 
   const STORICO_KEY = 'csm_storico';
   const MAX_STORICO = 20;
