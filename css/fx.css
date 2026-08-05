@@ -1,0 +1,378 @@
+/* ═══════════════════════════════════════════════════════
+   CHAMPION SYSTEM v8.1 — FX (RESPIRO + ANIMAZIONI)
+   ═══════════════════════════════════════════════════════ */
+
+/* ─── BREATHE: pulse + glow modulato da --breathe-inten ──── */
+@keyframes fx-breathe-neon {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 4px rgba(180, 92, 255, calc(var(--breathe-inten, 0.1) * 0.6)));
+  }
+  50% {
+    filter:
+      brightness(calc(1 + var(--breathe-inten, 0.1) * 0.4))
+      drop-shadow(0 0 calc(8px + var(--breathe-inten, 0.1) * 40px) rgba(180, 92, 255, var(--breathe-inten, 0.1)));
+  }
+}
+@keyframes fx-breathe-gold {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 4px rgba(251, 191, 36, calc(var(--breathe-inten, 0.1) * 0.6)));
+  }
+  50% {
+    filter:
+      brightness(calc(1 + var(--breathe-inten, 0.1) * 0.5))
+      drop-shadow(0 0 calc(10px + var(--breathe-inten, 0.1) * 36px) rgba(251, 191, 36, var(--breathe-inten, 0.1)));
+  }
+}
+@keyframes fx-breathe-danger {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 6px rgba(255, 51, 102, calc(var(--breathe-inten, 0.1) * 0.5)));
+  }
+  50% {
+    filter:
+      brightness(calc(1 + var(--breathe-inten, 0.1) * 0.3))
+      drop-shadow(0 0 calc(10px + var(--breathe-inten, 0.1) * 30px) rgba(255, 51, 102, var(--breathe-inten, 0.1)));
+  }
+}
+@keyframes fx-breathe-info {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 4px rgba(167, 139, 250, calc(var(--breathe-inten, 0.1) * 0.5)));
+  }
+  50% {
+    filter:
+      brightness(calc(1 + var(--breathe-inten, 0.1) * 0.35))
+      drop-shadow(0 0 calc(8px + var(--breathe-inten, 0.1) * 28px) rgba(167, 139, 250, var(--breathe-inten, 0.1)));
+  }
+}
+
+.fx-breathe[data-breathe="neon"]   { animation: fx-breathe-neon   var(--breathe-dur, 6s) ease-in-out infinite; }
+.fx-breathe[data-breathe="gold"]   { animation: fx-breathe-gold   var(--breathe-dur, 6s) ease-in-out infinite; }
+.fx-breathe[data-breathe="danger"] { animation: fx-breathe-danger var(--breathe-dur, 6s) ease-in-out infinite; }
+.fx-breathe[data-breathe="info"]   { animation: fx-breathe-info   var(--breathe-dur, 6s) ease-in-out infinite; }
+
+/* ─── STAGGER FADE-UP ─── */
+@keyframes fx-stagger-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fx-stagger {
+  animation: fx-stagger-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--stagger-delay, 0ms);
+}
+
+/* ─── GLOW BURST (flash radiale al save) — v3.x: ridotto su richiesta utente ─── */
+@keyframes fx-burst {
+  0%   { width: 0; height: 0; opacity: 0.22; transform: translate(-50%, -50%) scale(0); }
+  60%  { opacity: 0.14; }
+  100% { width: 220px; height: 220px; opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+.fx-burst {
+  position: fixed;
+  width: 0; height: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  animation: fx-burst 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+}
+
+/* ─── RING PROGRESS container ─── */
+.fx-ring {
+  position: relative;
+  width: var(--ring-size, 120px);
+  height: var(--ring-size, 120px);
+  display: inline-grid;
+  place-items: center;
+}
+.fx-ring svg { display: block; }
+.fx-ring-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.fx-ring-center {
+  font-family: 'Bebas Neue', 'Orbitron', sans-serif;
+  font-size: calc(var(--ring-size, 120px) * 0.30);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--text);
+  text-shadow: 0 0 12px rgba(180, 92, 255, 0.35);
+}
+.fx-ring-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ─── HEATMAP CELL ─── */
+@keyframes fx-cal-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.85); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.fx-heat-cell {
+  width: 34px; height: 34px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  position: relative;
+  transition: transform 180ms ease, border-color 180ms ease;
+  opacity: 0;
+  animation: fx-cal-in 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--cell-delay, 0ms);
+}
+.fx-heat-cell[data-intensity="1"] { background: rgba(180, 92, 255, 0.08); border-color: rgba(180, 92, 255, 0.16); color: var(--text-mute); }
+.fx-heat-cell[data-intensity="2"] { background: rgba(180, 92, 255, 0.20); border-color: rgba(180, 92, 255, 0.30); color: var(--neon); }
+.fx-heat-cell[data-intensity="3"] { background: rgba(180, 92, 255, 0.38); border-color: rgba(180, 92, 255, 0.55); color: #000; font-weight: 700; }
+.fx-heat-cell[data-intensity="4"] { background: var(--neon); border-color: var(--neon-bright); color: #000; font-weight: 800; box-shadow: 0 0 14px rgba(180, 92, 255, 0.4); }
+.fx-heat-cell.is-gold {
+  background: linear-gradient(135deg, #FBBF24, #F59E0B);
+  border-color: #FBBF24;
+  color: #000;
+  font-weight: 800;
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.55);
+  animation: fx-cal-in 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards,
+             fx-breathe-gold 4s ease-in-out infinite 320ms;
+  --breathe-inten: 0.25;
+}
+.fx-heat-cell.is-today {
+  outline: 2px solid var(--neon-bright);
+  outline-offset: 1px;
+  z-index: 1;
+}
+.fx-heat-cell.is-empty {
+  cursor: default;
+  border-color: transparent;
+  background: transparent;
+}
+.fx-heat-cell:not(.is-empty):hover {
+  transform: translateY(-2px) scale(1.05);
+  border-color: var(--neon-bright);
+}
+
+/* ─── SCROLLBAR per pannelli laterali ─── */
+.fx-scroll { overflow-y: auto; }
+.fx-scroll::-webkit-scrollbar { width: 6px; }
+.fx-scroll::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+
+/* ─── BEBAS DISPLAY title ─── */
+.fx-display {
+  font-family: 'Bebas Neue', 'Orbitron', sans-serif;
+  letter-spacing: 0.06em;
+  line-height: 0.95;
+  font-weight: 400;
+}
+
+/* ─── HOVER LIFT (riusabile su card) ─── */
+.fx-lift { transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease; }
+.fx-lift:hover {
+  transform: translateY(-3px);
+  border-color: var(--neon-border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(180, 92, 255, 0.08), 0 0 28px rgba(180, 92, 255, 0.12);
+}
+
+/* ─── STEPPER (per modali multi-step) ─── */
+.fx-stepper {
+  display: flex; flex-direction: column;
+  width: min(640px, 92vw);
+  max-height: 85vh;
+}
+.fx-stepper-track {
+  display: flex; gap: 8px;
+  padding: 12px 0 20px;
+}
+.fx-stepper-pill {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+.fx-stepper-pill::after {
+  content: '';
+  position: absolute; inset: 0;
+  width: 0;
+  background: linear-gradient(90deg, var(--neon), var(--neon-bright));
+  border-radius: 999px;
+  transition: width 360ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 10px rgba(180, 92, 255, 0.45);
+}
+.fx-stepper-pill.done::after  { width: 100%; }
+.fx-stepper-pill.now::after   { width: 60%; }
+.fx-stepper-pill.now::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 60% 50%, rgba(180, 92, 255, 0.35), transparent 70%);
+  animation: fx-pill-shimmer 1.8s ease-in-out infinite;
+}
+@keyframes fx-pill-shimmer {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.fx-stepper-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 4px 12px;
+}
+.fx-stepper-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border);
+}
+
+/* ─── CHIP TOGGLE (per tipo allenamento, mood) ─── */
+.fx-chip-grid {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.fx-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 160ms ease;
+  user-select: none;
+}
+.fx-chip:hover {
+  border-color: var(--neon-border);
+  transform: translateY(-1px);
+}
+.fx-chip.on {
+  background: var(--neon);
+  color: #000;
+  border-color: var(--neon-bright);
+  box-shadow: 0 0 14px rgba(180, 92, 255, 0.45);
+}
+
+/* ─── SLIDER VISUALE (range con tick) ─── */
+.fx-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--neon-deep), var(--neon)) var(--surface-2);
+  background-blend-mode: normal;
+  outline: none;
+}
+.fx-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--neon);
+  border: 3px solid var(--bg);
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(180, 92, 255, 0.55);
+  transition: transform 140ms ease;
+}
+.fx-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.fx-slider::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--neon);
+  border: 3px solid var(--bg);
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(180, 92, 255, 0.55);
+}
+.fx-slider-row {
+  display: grid;
+  grid-template-columns: 1fr 56px;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.fx-slider-val {
+  font-family: 'Bebas Neue', 'Orbitron', sans-serif;
+  font-size: 22px;
+  color: var(--neon);
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+.fx-slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ─── PANNELLO LATERALE (heatmap click giorno) ─── */
+.fx-side-panel {
+  position: fixed;
+  top: var(--topbar-h);
+  right: 0;
+  width: min(380px, 90vw);
+  height: calc(100vh - var(--topbar-h));
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.6);
+  z-index: 800;
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fx-side-panel.open { transform: translateX(0); }
+.fx-side-panel-head {
+  padding: var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fx-side-panel-title {
+  font-family: 'Bebas Neue', 'Orbitron', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  color: var(--neon);
+}
+.fx-side-panel-body {
+  flex: 1; overflow-y: auto;
+  padding: var(--sp-5);
+}
+
+/* ─── REDUCED MOTION ─── */
+@media (prefers-reduced-motion: reduce) {
+  .fx-breathe, .fx-stagger, .fx-burst,
+  .fx-heat-cell, .fx-stepper-pill::after, .fx-stepper-pill.now::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  .fx-stagger { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   CHART ENTER (v8.1) — fade-rise dei contenitori grafico
+   all'apertura del drill-down. CSS puro: l'animazione parte
+   a ogni mount del nodo, zero JS.
+   ═══════════════════════════════════════════════════════ */
+@keyframes fx-chart-enter {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.arch-l2-chart-wrap,
+.pano-modal-chart-wrap,
+.arch-focus-l2-trend-wrap {
+  animation: fx-chart-enter 480ms var(--ease) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .arch-l2-chart-wrap,
+  .pano-modal-chart-wrap,
+  .arch-focus-l2-trend-wrap { animation: none !important; }
+}

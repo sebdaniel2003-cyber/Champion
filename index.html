@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CHAMPION SYSTEM v8 — sistema personale di analisi allenamenti di pugilato">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0a0a0a">
+<!-- Anti-cache: forza il browser a NON riusare la versione cachata degli
+     asset. Utile in dev/file:// dove Chrome tende a servire aggressivamente
+     dal disk cache. Rimuovi in produzione. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>CHAMPION SYSTEM v8</title>
+
+<!-- Favicon inline: elimina la richiesta 404 di favicon.ico a ogni apertura -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%94%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@500;600;700;800;900&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<!-- Cache-buster (?v=...): incrementa questo numero ogni volta che modifichi
+     un CSS/JS, così il browser è OBBLIGATO a scaricare la nuova versione
+     invece di servire quella cached. Evita la classica "ho modificato ma
+     vedo ancora la vecchia" senza dover fare Ctrl+Shift+R. -->
+<link rel="stylesheet" href="css/base.css?v=8.5.1">
+<link rel="stylesheet" href="css/components.css?v=8.5.1">
+<link rel="stylesheet" href="css/pages.css?v=8.5.1">
+<link rel="stylesheet" href="css/fx.css?v=8.5.1">
+
+<!--
+  OTTIMIZZAZIONE SCRIPT:
+  - Tutti gli script hanno "defer": si scaricano in PARALLELO durante il parsing
+    dell'HTML ma vengono eseguiti in ORDINE, quindi le dipendenze restano intatte.
+  - Chart.js ora è LOCALE (js/vendor/): il sistema funziona anche senza internet
+    e non dipende più dalla disponibilità del CDN.
+  - data/food-db.js carica il database alimenti via script tag: fetch() da file://
+    è bloccato dal browser, quindi prima l'autocomplete nutrizione partiva vuoto.
+-->
+<script defer src="js/vendor/chart.umd.min.js"></script>
+<script defer src="data/food-db.js"></script>
+<script defer src="data/teoria.js?v=8.5.1"></script>
+<script defer src="js/data.js"></script>
+<script defer src="js/state.js"></script>
+<script defer src="js/calc.js"></script>
+<script defer src="js/nlp.js?v=8.5.1"></script>
+<script defer src="js/router.js"></script>
+<script defer src="js/ui/components.js?v=8.5.1"></script>
+<script defer src="js/ui/fx.js?v=8.5.1"></script>
+<script defer src="js/assistant-context.js"></script>
+<script defer src="js/assistant-rules.js"></script>
+<script defer src="js/assistant.js"></script>
+<script defer src="js/ui/dashboard.js"></script>
+<script defer src="js/ui/rev-forms.js?v=8.5.1"></script>
+<script defer src="js/ui/focus.js"></script>
+<script defer src="js/ui/fisica.js?v=8.5.1"></script>
+<script defer src="js/ui/oro-shared.js"></script>
+<script defer src="js/ui/tecnica.js?v=8.5.1"></script>
+<script defer src="js/ui/archivio.js?v=8.5.1"></script>
+<script defer src="js/ui/assistant.js"></script>
+<script defer src="js/ui/settings.js?v=8.5.1"></script>
+<script defer src="js/sync.js?v=8.5.1"></script>
+<script defer src="js/ui/inbox.js?v=8.5.1"></script>
+<script defer src="js/ui/palette.js?v=8.5.1"></script>
+<script defer src="js/app.js"></script>
+</head>
+<body>
+
+<!-- ═══ BACKGROUND LAYERS ═══ -->
+<div class="scanlines" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ═══ SPLASH ═══ -->
+<div id="splash" class="splash" aria-hidden="true">
+  <div class="splash-grain"></div>
+  <div class="splash-scanline"></div>
+  <div class="splash-content">
+    <div class="splash-logo">
+      <span class="splash-letter" style="--i:0">C</span>
+      <span class="splash-letter" style="--i:1">H</span>
+      <span class="splash-letter" style="--i:2">A</span>
+      <span class="splash-letter" style="--i:3">M</span>
+      <span class="splash-letter" style="--i:4">P</span>
+      <span class="splash-letter" style="--i:5">I</span>
+      <span class="splash-letter" style="--i:6">O</span>
+      <span class="splash-letter" style="--i:7">N</span>
+    </div>
+    <div class="splash-sub">SYSTEM <span class="splash-version">v8</span></div>
+    <div class="splash-line"></div>
+    <div class="splash-tagline">DIVENTA QUELLO CHE DEVI ESSERE</div>
+  </div>
+</div>
+
+<!-- ═══ TOP BAR ═══ -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">⚔</div>
+    <div class="brand-name">CHAMPION<span class="v">v8</span></div>
+  </div>
+
+  <nav class="nav" id="nav" aria-label="Sezioni principali">
+    <button class="nav-item" data-section="dashboard">DASHBOARD</button>
+    <button class="nav-item" data-section="focus">FOCUS</button>
+    <button class="nav-item" data-section="fisica">FISICA</button>
+    <button class="nav-item" data-section="tecnica">TECNICA</button>
+    <button class="nav-item" data-section="archivio">ARCHIVIO</button>
+    <button class="nav-item" data-section="assistente">ASSISTENTE</button>
+  </nav>
+
+  <div class="actions">
+    <button class="cmdk-trigger" id="btn-palette" title="Palette comandi (Ctrl+K)" aria-label="Palette comandi">
+      <span class="cmdk-trigger-lbl">CERCA</span><kbd>⌘K</kbd>
+    </button>
+    <button class="action-btn primary-cta" id="btn-compila" title="Compila Revisione di Oggi">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>COMPILA</span>
+    </button>
+    <button class="action-btn" id="btn-backup" title="Backup JSON" aria-label="Backup">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <button class="action-btn" id="btn-restore" title="Ripristina Backup" aria-label="Ripristina">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </button>
+    <button class="action-btn" id="btn-settings" title="Impostazioni" aria-label="Impostazioni">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="assistant-orb" id="assistant-widget" title="Assistente Live" aria-label="Assistente Live">
+      <span class="assistant-dot" data-state="ok"></span>
+      <span class="assistant-icon" aria-hidden="true">🧠</span>
+    </button>
+  </div>
+</header>
+
+<!-- ═══ SUB-TAB BAR ═══ -->
+<div class="subbar" id="subbar">
+  <div class="sub-meta"><span class="dot"></span><span id="sub-meta-text">SYSTEM ONLINE</span></div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+  <div id="route-outlet" class="route-outlet"></div>
+</main>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+
+<!-- ═══ FILE INPUT (hidden, per restore) ═══ -->
+<input type="file" id="restore-file" accept=".json" hidden>
+
+<noscript>
+  <div style="padding:40px;text-align:center;font-family:monospace;color:#B45CFF;background:#0a0a0a">
+    CHAMPION SYSTEM richiede JavaScript attivo.
+  </div>
+</noscript>
+
+</body>
+</html>

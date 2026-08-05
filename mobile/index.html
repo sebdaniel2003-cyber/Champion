@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Champion — detta quello che hai fatto, il PC lo registra">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0B0B0E">
+<title>Champion · Assistente</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Champion">
+
+<!-- I font sono un di più: se la rete manca partono quelli di sistema
+     e l'app resta perfettamente usabile. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css?v=8.6.0">
+
+<!-- Ordine: prima il contesto (definisce CS), poi il vocabolario alimenti,
+     poi il parser CONDIVISO col PC — non una copia: lo stesso file, così
+     telefono e PC non potranno mai divergere. -->
+<script defer src="shim.js?v=8.6.0"></script>
+<script defer src="../data/food-db.js"></script>
+<script defer src="../js/nlp.js?v=8.6.0"></script>
+<script defer src="net.js?v=8.6.0"></script>
+<script defer src="app.js?v=8.6.0"></script>
+</head>
+<body>
+
+<!-- ═══ ACCESSO ═══ -->
+<section class="screen is-on" data-screen="login">
+  <div class="login-wrap">
+    <div class="login-mark" aria-hidden="true">⚔</div>
+    <h1 class="login-title">CHAMPION</h1>
+    <p class="login-sub">ASSISTENTE</p>
+
+    <form id="form-login" class="login-form" autocomplete="on">
+      <label class="campo">
+        <span>EMAIL</span>
+        <input id="login-email" type="email" inputmode="email" autocomplete="username"
+               required placeholder="la tua email">
+      </label>
+      <label class="campo">
+        <span>PASSWORD</span>
+        <input id="login-pw" type="password" autocomplete="current-password"
+               required placeholder="••••••••">
+      </label>
+      <div id="login-err" class="login-err" role="alert"></div>
+      <button id="btn-login" class="btn primary lg" type="submit">ENTRA</button>
+    </form>
+
+    <p class="login-nota">
+      Lo stesso account che usi in Champion sul PC.<br>
+      Da qui non si modifica niente: quello che dici arriva al PC
+      e lo registri tu, dopo averlo riletto.
+    </p>
+  </div>
+</section>
+
+<!-- ═══ ASSISTENTE ═══ -->
+<section class="screen" data-screen="main">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">⚔</span>
+      <span class="brand-name">CHAMPION</span>
+    </div>
+    <div class="stato">
+      <span id="stato-dot" class="stato-dot is-ok" aria-hidden="true"></span>
+      <span id="stato-txt" class="stato-txt">COLLEGATO</span>
+    </div>
+    <button id="btn-refresh" class="icon-btn" title="Aggiorna dal PC" aria-label="Aggiorna">⟳</button>
+    <button id="btn-esci" class="icon-btn" title="Esci" aria-label="Esci">⏻</button>
+  </header>
+
+  <main class="main">
+
+    <section id="contesto" class="ctx" aria-live="polite"></section>
+
+    <section class="detta">
+      <button id="btn-mic" class="mic" aria-label="Detta">
+        <span class="mic-ico" aria-hidden="true">🎙</span>
+        <span class="mic-onda" aria-hidden="true"></span>
+      </button>
+      <div id="mic-hint" class="mic-hint" aria-live="polite"></div>
+
+      <div class="detta-riga">
+        <textarea id="testo" class="detta-input" rows="2" enterkeyhint="done"
+          placeholder="es. 2 ore allenamento, 1 ora sala pesi 1 ora pugilato"></textarea>
+        <button id="btn-leggi" class="btn">LEGGI</button>
+      </div>
+      <div class="detta-hint">Parla o scrivi in italiano normale.</div>
+    </section>
+
+    <section id="preview" class="preview" aria-live="polite"></section>
+    <div id="azioni" class="azioni"></div>
+    <section id="storico" class="storico"></section>
+
+  </main>
+</section>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<noscript>
+  <div class="noscript">Serve JavaScript attivo.</div>
+</noscript>
+
+</body>
+</html>
