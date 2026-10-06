@@ -680,3 +680,35 @@ body {
 .pane-chiedi .ask-input { flex: 1 1 100%; }
 .pane-chiedi .ask-mic { flex: 0 0 56px; width: 56px; height: 52px; }
 .pane-chiedi .ask-send { flex: 1; padding: 0 16px; height: 52px; }
+
+/* ═══════════════════════════════════════════════════════
+   BORDI LATERALI (telefono in orizzontale) — 2026-10-06
+   Con viewport-fit=cover la pagina arriva sotto notch e angoli arrotondati:
+   la sinistra e la destra venivano coperte. Ora i margini laterali
+   rispettano le aree sicure, e in orizzontale la colonna è più larga.
+   ═══════════════════════════════════════════════════════ */
+:root {
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+}
+.topbar { padding-left: calc(14px + var(--safe-l)); padding-right: calc(14px + var(--safe-r)); }
+.schede { padding-left: calc(14px + var(--safe-l)); padding-right: calc(14px + var(--safe-r)); }
+.main { padding-left: calc(14px + var(--safe-l)); padding-right: calc(14px + var(--safe-r)); }
+.login-wrap { padding-left: calc(24px + var(--safe-l)); padding-right: calc(24px + var(--safe-r)); }
+.toast { max-width: calc(100vw - 32px - var(--safe-l) - var(--safe-r)); }
+
+@media (orientation: landscape) and (min-width: 700px) {
+  .main { max-width: 900px; }
+  .pane-chiedi .ask-panel { margin-left: 0; margin-right: 0; }
+}
+
+/* niente frase tagliata a destra: tutto il testo delle risposte va a capo */
+.pane-chiedi, .pane-chiedi * { min-width: 0; }
+.pane-chiedi .ask-card, .pane-chiedi .ask-notes div, .pane-chiedi .ask-concl, .pane-chiedi .ask-manca,
+.pane-chiedi .ask-det-vuoto, .pane-chiedi .ask-state-s, .pane-chiedi .ask-state-row span,
+.pane-chiedi .ask-cause-row span, .pane-chiedi .ask-vs-h span, .pane-chiedi .ask-nota-b span,
+.pane-chiedi .ask-sug, .pane-chiedi .ask-pill b, .pane-chiedi .ask-low { overflow-wrap: anywhere; word-break: normal; }
+.pane-chiedi .ask-pill b { white-space: normal; }
+.pane-chiedi .ask-ans { max-width: 100%; }
+.pane-chiedi .ask-cause-row { grid-template-columns: 1fr; gap: 4px; }
+.pane-chiedi .ask-cause-row em { justify-self: start; }
