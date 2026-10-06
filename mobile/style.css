@@ -712,3 +712,11 @@ body {
 .pane-chiedi .ask-ans { max-width: 100%; }
 .pane-chiedi .ask-cause-row { grid-template-columns: 1fr; gap: 4px; }
 .pane-chiedi .ask-cause-row em { justify-self: start; }
+
+/* tasto per svuotare la conversazione, visibile anche sul telefono */
+.pane-chiedi .ask-foot { display: flex; justify-content: flex-end; padding: 0; }
+.pane-chiedi .ask-foot > span:first-child { display: none; }
+.pane-chiedi .ask-foot-r { gap: 8px; }
+.pane-chiedi .ask-clear { text-decoration: none; font: 600 12px/1 var(--ui); letter-spacing: .08em; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.pane-chiedi .ask-clear::before { content: '🗑  '; }
+.pane-chiedi .ask-clear:active { border-color: var(--danger); color: var(--danger); }
