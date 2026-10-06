@@ -425,6 +425,13 @@ const CHIEDI_UI = (function () {
     }));
     box.querySelectorAll('[data-ask-claude]').forEach(b => b.addEventListener('click', () => apriAnalisi(b.dataset.askClaude)));
     box.querySelectorAll('[data-ask-edit]').forEach(b => b.addEventListener('click', () => apriModifica(b.dataset.askEdit, Number(b.dataset.i))));
+    // telefono: nei riepiloghi (più voci) ogni voce è chiusa e si apre toccandola
+    if (window.CHIEDI_SENZA_ANALISI) {
+      box.querySelectorAll('.ask-stats.multi .ask-stat').forEach(t => t.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        t.classList.toggle('open');
+      }));
+    }
     box.querySelectorAll('[data-ask-nota]').forEach(b => b.addEventListener('click', () => {
       let lista = []; try { lista = ASK.notato(); } catch (e) { lista = []; }
       const n = lista[Number(b.dataset.askNota)];

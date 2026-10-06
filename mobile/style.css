@@ -675,8 +675,119 @@ body {
 .pane-chiedi .ask-input { font-size: 16px; padding: 13px 14px; }
 .pane-chiedi .ask-foot { display: none; }
 
-/* modulo di CHIEDI sul telefono: il campo occupa tutta la riga, sotto microfono + invio */
-.pane-chiedi .ask-form { flex-direction: row; flex-wrap: wrap; gap: 8px; }
-.pane-chiedi .ask-input { flex: 1 1 100%; }
-.pane-chiedi .ask-mic { flex: 0 0 56px; width: 56px; height: 52px; }
-.pane-chiedi .ask-send { flex: 1; padding: 0 16px; height: 52px; }
+/* ═══════════════════════════════════════════════════════
+   CHIEDI sul telefono: versione COMPATTA (2026-10-06)
+   Le risposte non devono costringere a scorrere per metri: meno aria,
+   riepiloghi a due colonne con dettaglio a scomparsa, input su una riga.
+   ═══════════════════════════════════════════════════════ */
+
+/* risposte a tutta larghezza (via l'avatar) e card più strette */
+.pane-chiedi .ask-panel { margin: 8px 6px 0; }
+.pane-chiedi .ask-thread { padding: 10px 8px 4px; gap: 12px; }
+.pane-chiedi .ask-ans { grid-template-columns: 1fr; gap: 0; }
+.pane-chiedi .ask-ans-av { display: none; }
+.pane-chiedi .ask-q { max-width: 92%; padding: 9px 13px; font-size: 15px; }
+.pane-chiedi .ask-card { padding: 12px 12px 10px; gap: 10px; border-radius: 14px; }
+
+/* "ho capito": una riga piccola invece di due pillole grandi */
+.pane-chiedi .ask-capito { gap: 5px; }
+.pane-chiedi .ask-capito-k { display: none; }
+.pane-chiedi .ask-pill { padding: 4px 9px; font-size: 12px; gap: 6px; max-width: 100%; }
+.pane-chiedi .ask-pill span { font-size: 9px; }
+.pane-chiedi .ask-pill b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62vw; }
+
+/* numeri e grafici più bassi */
+.pane-chiedi .ask-stat { padding: 11px 12px; gap: 6px; }
+.pane-chiedi .ask-stat.single { padding: 13px 13px 12px; }
+.pane-chiedi .ask-n b { font-size: 30px; }
+.pane-chiedi .ask-stat.single .ask-n b { font-size: 40px; }
+.pane-chiedi .ask-lbl { font-size: 12px; letter-spacing: .08em; }
+.pane-chiedi .ask-ico { font-size: 17px; }
+.pane-chiedi .ask-delta { font-size: 11px; padding: 4px 7px; }
+.pane-chiedi .ask-cols { height: 78px; gap: 4px; }
+.pane-chiedi .ask-line-wrap { height: 88px; margin-top: 22px; }
+.pane-chiedi .ask-trend { gap: 6px; }
+.pane-chiedi .ask-more { font-size: 10.5px; }
+.pane-chiedi .ask-notes { font-size: 12.5px; padding-top: 8px; }
+.pane-chiedi .ask-per { display: none; }
+
+/* riepiloghi (più voci): griglia a due colonne, dettaglio che si apre toccando */
+.pane-chiedi .ask-stats.multi { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pane-chiedi .ask-stats.multi .ask-stat { cursor: pointer; align-content: start; }
+.pane-chiedi .ask-stats.multi .ask-stat-h { flex-wrap: wrap; gap: 4px 6px; }
+.pane-chiedi .ask-stats.multi .ask-stat-h::after { content: '▾'; margin-left: auto; color: var(--text-dim); font-size: 11px; }
+.pane-chiedi .ask-stats.multi .ask-stat.open .ask-stat-h::after { content: '▴'; }
+.pane-chiedi .ask-stats.multi .ask-delta { margin-left: 0; }
+.pane-chiedi .ask-stats.multi .ask-n em { display: none; }
+.pane-chiedi .ask-stats.multi .ask-chart,
+.pane-chiedi .ask-stats.multi .ask-goal,
+.pane-chiedi .ask-stats.multi .ask-more,
+.pane-chiedi .ask-stats.multi .ask-det-wrap { display: none; }
+.pane-chiedi .ask-stats.multi .ask-stat.open { grid-column: 1 / -1; }
+.pane-chiedi .ask-stats.multi .ask-stat.open .ask-chart,
+.pane-chiedi .ask-stats.multi .ask-stat.open .ask-goal { display: grid; }
+.pane-chiedi .ask-stats.multi .ask-stat.open .ask-more { display: block; }
+
+/* confronto: righe sottili */
+.pane-chiedi .ask-vs-list { gap: 6px; }
+.pane-chiedi .ask-vs { padding: 8px 10px; gap: 4px; }
+.pane-chiedi .ask-vs-h { font-size: 14px; }
+.pane-chiedi .ask-vs-row { gap: 8px; }
+.pane-chiedi .ask-vs-row .bar { height: 7px; }
+.pane-chiedi .ask-vs-row b { font-size: 12.5px; min-width: 70px; }
+.pane-chiedi .ask-vs-leg { font-size: 12px; gap: 12px; }
+
+/* pulsanti sotto la risposta: piccoli */
+.pane-chiedi .ask-acts { padding-top: 0; }
+.pane-chiedi .ask-act { padding: 7px 10px; font-size: 11.5px; }
+
+/* "come sto", perché, record */
+.pane-chiedi .ask-state-n b { font-size: 32px; }
+.pane-chiedi .ask-state-t { font-size: 19px; }
+.pane-chiedi .ask-state-s { font-size: 14.5px; }
+.pane-chiedi .ask-state-row { font-size: 14px; }
+.pane-chiedi .ask-concl { font-size: 14.5px; padding: 10px 12px; }
+.pane-chiedi .ask-cause-row { padding: 8px 10px; font-size: 14px; }
+.pane-chiedi .ask-podium { gap: 6px; }
+.pane-chiedi .ask-pod-bar { padding-top: 8px; font-size: 22px; }
+.pane-chiedi .ask-pod.p1 .ask-pod-bar { height: 86px; }
+.pane-chiedi .ask-pod.p2 .ask-pod-bar { height: 64px; }
+.pane-chiedi .ask-pod.p3 .ask-pod-bar { height: 48px; }
+.pane-chiedi .ask-pod-v { font-size: 16px; }
+.pane-chiedi .ask-pod-l { font-size: 11.5px; }
+
+/* schermata di partenza: compatta */
+.pane-chiedi .ask-start { gap: 14px; padding: 2px 0 4px; }
+.pane-chiedi .ask-start-ico { width: 44px; height: 44px; font-size: 22px; border-radius: 14px; }
+.pane-chiedi .ask-start-t { font-size: 21px; }
+.pane-chiedi .ask-start-s { display: none; }
+.pane-chiedi .ask-notato-row { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 4px; scroll-snap-type: x proximity; scrollbar-width: none; }
+.pane-chiedi .ask-notato-row::-webkit-scrollbar { display: none; }
+.pane-chiedi .ask-nota { flex: 0 0 78%; scroll-snap-align: start; padding: 10px 12px 10px 14px; gap: 10px; }
+.pane-chiedi .ask-nota-i { width: 32px; height: 32px; flex-basis: 32px; font-size: 17px; }
+.pane-chiedi .ask-nota-b span { font-size: 13.5px; }
+.pane-chiedi .ask-groups { grid-template-columns: 1fr 1fr; gap: 10px 8px; }
+.pane-chiedi .ask-group { gap: 6px; }
+.pane-chiedi .ask-group-t { font-size: 10px; }
+.pane-chiedi .ask-sug { font-size: 13px; padding: 9px 10px; border-radius: 10px; line-height: 1.25; }
+
+/* barra in basso: una riga sola (campo + microfono + invio), domande rapide sottili */
+.pane-chiedi .ask-bottom { gap: 8px; padding: 8px 8px calc(8px + var(--safe-b)); }
+.pane-chiedi .ask-quick { gap: 6px; }
+.pane-chiedi .ask-quick .ask-chip { font-size: 12px; padding: 7px 11px; }
+.pane-chiedi .ask-form { flex-wrap: nowrap; gap: 6px; }
+.pane-chiedi .ask-input { flex: 1 1 auto; min-width: 0; padding: 12px 13px; font-size: 15px; border-radius: 12px; }
+.pane-chiedi .ask-mic { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 12px; font-size: 18px; }
+.pane-chiedi .ask-send { flex: 0 0 auto; height: 46px; padding: 0 14px; font-size: 13px; border-radius: 12px; }
+.pane-chiedi .chiedi-eta { margin: 6px 8px 0; padding: 6px 10px; font-size: 10.5px; }
+
+/* ritocchi: barra di scrittura su una riga sola e intestazione delle voci in ordine */
+.pane-chiedi .ask-form { flex-direction: row; }
+.pane-chiedi .ask-stats.multi .ask-stat-h { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 2px 7px; }
+.pane-chiedi .ask-stats.multi .ask-stat-h::after { margin-left: 0; }
+.pane-chiedi .ask-stats.multi .ask-lbl { font-size: 11px; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pane-chiedi .ask-stats.multi .ask-ico { font-size: 16px; }
+.pane-chiedi .ask-stats.multi .ask-delta { grid-column: 1 / -1; justify-self: start; font-size: 10.5px; padding: 3px 7px; }
+.pane-chiedi .ask-stats.multi .ask-stat-h::after { grid-column: 3; grid-row: 1; justify-self: end; }
+.pane-chiedi .ask-stats.multi .ask-delta { grid-row: 2; }
+.pane-chiedi .ask-stats.multi .ask-lbl { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.15; }
