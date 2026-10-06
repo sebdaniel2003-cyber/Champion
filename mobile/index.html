@@ -21,17 +21,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="style.css?v=8.7.4">
+<link rel="stylesheet" href="style.css?v=8.8.1">
+<link rel="stylesheet" href="../css/ask.css?v=1.0.1">
 
 <!-- Ordine: prima il contesto (definisce CS), poi il vocabolario alimenti,
      poi i due file CONDIVISI col PC — non copie: gli stessi file, così
      telefono e PC non potranno mai divergere. -->
-<script defer src="shim.js?v=8.7.4"></script>
+<script defer src="shim.js?v=8.8.0"></script>
 <script defer src="../data/food-db.js"></script>
 <script defer src="../js/durata.js?v=8.7.4"></script>
 <script defer src="../js/nlp.js?v=8.7.4"></script>
 <script defer src="net.js?v=8.7.4"></script>
-<script defer src="app.js?v=8.7.4"></script>
+<script defer src="ask-shim.js?v=1.0.0"></script>
+<script defer src="../js/ask.js?v=2.0.0"></script>
+<script defer src="../js/ui/chiedi.js?v=3.0.2"></script>
+<script defer src="app.js?v=8.8.0"></script>
 </head>
 <body>
 
@@ -82,7 +86,15 @@
     <button id="btn-esci" class="icon-btn" title="Esci" aria-label="Esci">⏻</button>
   </header>
 
+  <nav class="schede" id="schede" aria-label="Sezioni">
+    <button class="scheda is-on" data-scheda="detta" type="button">🎙 DETTA</button>
+    <button class="scheda" data-scheda="chiedi" type="button">💬 CHIEDI</button>
+  </nav>
+
   <main class="main">
+
+  <div id="pane-chiedi" class="pane-chiedi" hidden></div>
+  <div id="pane-detta">
 
     <section id="contesto" class="ctx" aria-live="polite"></section>
 
@@ -105,6 +117,7 @@
     <div id="azioni" class="azioni"></div>
     <section id="storico" class="storico"></section>
 
+  </div>
   </main>
 </section>
 

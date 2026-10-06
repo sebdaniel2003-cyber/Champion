@@ -12,7 +12,7 @@
    e autenticazione, servirli vecchi sarebbe peggio che non servirli.
    ═══════════════════════════════════════════════════════ */
 
-const VERSIONE = 'champion-mob-v8.7.4';
+const VERSIONE = 'champion-mob-v8.8.1';
 
 // Il parser e il database alimenti stanno fuori da mobile/: sono gli
 // stessi file del PC, non copie. Il service worker può comunque
@@ -23,6 +23,7 @@ const GUSCIO = [
   './index.html',
   './style.css',
   './shim.js',
+  './ask-shim.js',
   './net.js',
   './app.js',
   './manifest.json',
@@ -32,6 +33,9 @@ const GUSCIO = [
   './apple-touch-icon.png',
   '../js/durata.js',
   '../js/nlp.js',
+  '../js/ask.js',
+  '../js/ui/chiedi.js',
+  '../css/ask.css',
   '../data/food-db.js',
 ];
 

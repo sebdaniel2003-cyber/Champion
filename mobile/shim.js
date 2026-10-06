@@ -61,6 +61,42 @@ const CTX = (function () {
 })();
 
 
+/* ─── Stato ricostruito dal contesto ─────────────────────
+   Oltre a ciò che legge il parser, qui nasce la forma "da PC" dei dati
+   (revisioni, obiettivi, pesate…) che `js/ask.js` si aspetta, a partire
+   dallo storico di 90 giorni pubblicato dal PC (`ctx.storico`). */
+let _cacheStato = null, _cacheChiave = null;
+function costruisciStato(c) {
+  const st = c.storico || {};
+  return {
+    cataloghi: {
+      tipiAllenamento: (c.cataloghi && c.cataloghi.tipiAllenamento) || [],
+      mood: (c.cataloghi && c.cataloghi.mood) || [],
+    },
+    revFieldsConfig: { coreVisibility: c.campiAttivi || {} },
+    targetNutrizione: c.targetNutrizione || {},
+    profile: c.profilo || {},
+
+    // — per CHIEDI —
+    storicoDa: st.da || null,
+    revisioni: (st.revisioni || []).map(g => ({
+      data: g.data, oreAllenamento: g.ore, sessioniGiorno: g.ses, dettagliSessioni: null,
+      flessioni: g.fl, squat: g.sq, addominali: g.ad, kmCorsa: g.km, sonnoOre: g.sonno,
+      riposo: !!g.rip, tecnica: g.tec, intensita: g.int, affaticamento: g.aff, letturaMin: g.lett, mood: g.mood || [],
+    })),
+    corsa: st.corsa || [],
+    sonno: st.sonno || [],
+    pesate: (() => { const l = (st.pesate || []).slice(); if (st.pesataPrima) l.unshift(st.pesataPrima); return l; })(),
+    obiettivi: (st.obiettivi || []).map((o, i) => ({
+      id: 'o' + i, descrizione: o.nome, categoria: o.cat, unita: o.un, target: o.tg,
+      scadenza: o.sc, periodo: o.per, auto: !!o.auto, completed: !!o.comp, currentManual: o.man || 0,
+    })),
+    infortuni: (st.infortuni || []).map(i => ({ parte: i.parte, dataInizio: i.dal, dataFine: i.al, gravita: i.gravita })),
+    piano: c.piano || { riposoFisso: [1] },
+    targetGiorn: c.targetGiorn || null,
+  };
+}
+
 /* ─── CS ridotto: solo ciò che il parser legge ───────────
    Ogni voce ha un fallback vuoto, così `NLP.parse` non lancia mai
    anche quando il contesto non è ancora arrivato. */
@@ -68,15 +104,11 @@ const CS = {
 
   get state() {
     const c = CTX.get() || {};
-    return {
-      cataloghi: {
-        tipiAllenamento: (c.cataloghi && c.cataloghi.tipiAllenamento) || [],
-        mood: (c.cataloghi && c.cataloghi.mood) || [],
-      },
-      revFieldsConfig: { coreVisibility: c.campiAttivi || {} },
-      targetNutrizione: c.targetNutrizione || {},
-      profile: c.profilo || {},
-    };
+    if (!_cacheStato || _cacheChiave !== c.aggiornatoIl) {
+      _cacheStato = costruisciStato(c);
+      _cacheChiave = c.aggiornatoIl;
+    }
+    return _cacheStato;
   },
 
   get AREE_TECNICHE() {

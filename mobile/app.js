@@ -14,7 +14,7 @@ const APP = (function () {
 
   // Va tenuta allineata a VERSIONE in sw.js: è quella che vedi in alto e che
   // dice a colpo d'occhio se il telefono sta girando l'ultima versione.
-  const VERSIONE_APP = '8.7.4';
+  const VERSIONE_APP = '8.8.1';
 
   const STORICO_KEY = 'csm_storico';
   const MAX_STORICO = 20;
@@ -616,12 +616,13 @@ const APP = (function () {
 
     initLogin();
     initVoce();
+    initSchede();
 
     el('btn-leggi').addEventListener('click', leggi);
     el('testo').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); leggi(); }
     });
-    el('btn-refresh').addEventListener('click', () => aggiornaContesto(true));
+    el('btn-refresh').addEventListener('click', () => { aggiornaContesto(true); setTimeout(() => { if (el('pane-chiedi') && !el('pane-chiedi').hidden) apriChiedi(); }, 1500); });
     el('btn-esci').addEventListener('click', () => {
       if (!confirm('Esci dall\'account su questo telefono?')) return;
       NET.esci();
@@ -674,7 +675,45 @@ const APP = (function () {
     }
   }
 
-  return { init, leggi, invia, renderContesto, _parsed: () => parsed };
+  // ─── SCHEDE: DETTA · CHIEDI ─────────────────────────
+  let chiediPronto = false;
+  function mostraScheda(nome) {
+    document.querySelectorAll('#schede .scheda').forEach(b => b.classList.toggle('is-on', b.dataset.scheda === nome));
+    const detta = el('pane-detta'), chiedi = el('pane-chiedi');
+    if (detta) detta.hidden = nome !== 'detta';
+    if (chiedi) chiedi.hidden = nome !== 'chiedi';
+    if (nome === 'chiedi') apriChiedi();
+  }
+
+  function apriChiedi() {
+    const box = el('pane-chiedi');
+    if (!box) return;
+    const pag = ROUTER._pagine['assistente/chiedi'];
+    if (!pag) { box.innerHTML = '<div class="ask-notes">Le domande non sono disponibili in questa versione.</div>'; return; }
+    const c = CTX.get();
+    if (!c || !c.storico) {
+      // Il PC non ha ancora pubblicato lo storico: senza, ogni risposta sarebbe sbagliata.
+      box.innerHTML = '<div class="chiedi-vuoto"><b>Dati non ancora arrivati</b><span>Apri Champion sul PC e lascialo acceso un minuto: poi tocca ⟳ qui sopra.</span></div>';
+      return;
+    }
+    const min = CTX.etaMinuti();
+    const eta = min === Infinity ? '' : (min < 2 ? 'aggiornati adesso' : min < 90 ? `aggiornati ${min} min fa` : min < 2880 ? `aggiornati ${Math.round(min / 60)} h fa` : `aggiornati ${Math.round(min / 1440)} giorni fa`);
+    box.innerHTML = `<div class="chiedi-eta ${min > 1440 ? 'is-vecchio' : ''}">I dati vengono dal PC · ${eta}${min > 1440 ? ' · apri Champion sul PC per aggiornarli' : ''}</div>` + pag.render();
+    if (pag.dopo) pag.dopo();
+  }
+
+  // «ho fatto 60 flessioni» scritto in CHIEDI: passa dalla dettatura, con la sua doppia conferma.
+  function registraTesto(testo) {
+    mostraScheda('detta');
+    const t = el('testo');
+    if (t) { t.value = testo; leggi(); }
+  }
+
+  function initSchede() {
+    document.querySelectorAll('#schede .scheda').forEach(b => b.addEventListener('click', () => mostraScheda(b.dataset.scheda)));
+  }
+
+  return { init, leggi, invia, renderContesto, toast, registraTesto, mostraScheda, _parsed: () => parsed };
 
 })();
 

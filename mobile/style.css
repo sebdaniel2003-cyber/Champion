@@ -645,3 +645,38 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
+
+/* ═══════════════════════════════════════════════════════
+   SCHEDE DETTA / CHIEDI + alias dei token usati da css/ask.css
+   ═══════════════════════════════════════════════════════ */
+:root {
+  --text: var(--txt);
+  --text-mute: #A9A9B6;
+  --text-dim: var(--muted);
+  --border: var(--line);
+  --surface: var(--panel);
+  --info: #22D3EE;
+}
+
+.schede { display: flex; gap: 8px; padding: 8px 14px 4px; }
+.scheda { flex: 1; font: 700 15px/1 var(--ui); letter-spacing: .12em; padding: 13px 10px; border-radius: var(--r-s); border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.scheda.is-on { color: var(--txt); border-color: var(--neon-border); background: var(--neon-soft); }
+.pane-chiedi[hidden], #pane-detta[hidden] { display: none; }
+
+.chiedi-eta { margin: 8px 14px 0; padding: 8px 12px; font: 500 11px/1.3 var(--mono); letter-spacing: .06em; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--r-s); }
+.chiedi-eta.is-vecchio { color: var(--warn); border-color: rgba(251,191,36,.4); }
+.chiedi-vuoto { margin: 24px 14px; padding: 18px; display: grid; gap: 8px; border: 1px dashed var(--line); border-radius: var(--r); color: var(--muted); font-size: 15px; line-height: 1.45; }
+.chiedi-vuoto b { color: var(--txt); font-size: 17px; }
+
+.pane-chiedi .ask-panel { margin: 10px 8px 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
+.pane-chiedi .ask-thread { max-height: none; min-height: 0; overflow: visible; padding: 14px 10px 6px; }
+.pane-chiedi .ask-bottom { position: sticky; bottom: 0; z-index: 5; padding: 10px 10px calc(10px + var(--safe-b)); background: var(--bg); }
+.pane-chiedi .ask-start-s { font-size: 14px; }
+.pane-chiedi .ask-input { font-size: 16px; padding: 13px 14px; }
+.pane-chiedi .ask-foot { display: none; }
+
+/* modulo di CHIEDI sul telefono: il campo occupa tutta la riga, sotto microfono + invio */
+.pane-chiedi .ask-form { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+.pane-chiedi .ask-input { flex: 1 1 100%; }
+.pane-chiedi .ask-mic { flex: 0 0 56px; width: 56px; height: 52px; }
+.pane-chiedi .ask-send { flex: 1; padding: 0 16px; height: 52px; }
